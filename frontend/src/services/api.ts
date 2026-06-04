@@ -4,7 +4,7 @@ import type { ApiResponse } from '../types/api.types';
 // En producción (Vercel) no existe ese proxy, así que VITE_API_URL debe
 // apuntar a la URL real del backend en Render, ej:
 //   VITE_API_URL=https://gymmanager-backend.onrender.com/api
-const API_BASE = import.meta.env.VITE_API_URL ?? '/api';
+const API_BASE = '/api';
 
 
 class ApiClient {

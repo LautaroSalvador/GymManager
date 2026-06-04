@@ -98,33 +98,33 @@ body {
 
 /* ─── Input base ────────────────────────────────────────────────────────── */
 
-.input-base {
-  width: 100%;
-  /* padding-right aumentado para que el texto nunca solape
-     los íconos del gestor de contraseñas del browser */
-  padding: 0.625rem 2.25rem 0.625rem 0.875rem;
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  color: #111827;
-  font-size: 0.9375rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  outline: none;
-}
+@layer base {
+  .input-base {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    color: #111827;
+    font-size: 0.9375rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    outline: none;
+  }
 
-.input-base::placeholder {
-  color: #9ca3af;
-}
+  .input-base::placeholder {
+    color: #9ca3af;
+  }
 
-.input-base:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
-}
+  .input-base:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  }
 
-.input-base:disabled {
-  background: #f9fafb;
-  opacity: 0.7;
-  cursor: not-allowed;
+  .input-base:disabled {
+    background: #f9fafb;
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
 }
 
 /* ─── Ocultar íconos de autocompletado del browser ─────────────────────── */
