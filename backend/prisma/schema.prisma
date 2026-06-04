@@ -1,0 +1,78 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Usuario ───────────────────────────────────────────────────────────────
+
+model Usuario {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("usuarios")
+}
+
+// ─── Cliente ───────────────────────────────────────────────────────────────
+
+model Cliente {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  dni       String?
+  telefono  String?
+  fechaAlta DateTime @map("fecha_alta") @db.Date
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  pagos  Pago[]
+  notas  Nota[]
+
+  @@map("clientes")
+}
+
+// ─── Pago ──────────────────────────────────────────────────────────────────
+
+model Pago {
+  id          Int      @id @default(autoincrement())
+  clienteId   Int      @map("cliente_id")
+  fechaPago   DateTime @map("fecha_pago") @db.Date
+  monto       Decimal  @db.Decimal(10, 2)  // ingresado libremente por el usuario
+  periodoMes  Int      @map("periodo_mes")   // 1–12
+  periodoAnio Int      @map("periodo_anio")
+  medioPago   String?  @map("medio_pago")    // Efectivo | Transferencia | texto libre
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  cliente Cliente @relation(fields: [clienteId], references: [id])
+
+  @@unique([clienteId, periodoMes, periodoAnio])  // un pago por período
+  @@map("pagos")
+}
+
+// ─── Nota ──────────────────────────────────────────────────────────────────
+
+model Nota {
+  id        Int      @id @default(autoincrement())
+  clienteId Int      @map("cliente_id")
+  texto     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  cliente Cliente @relation(fields: [clienteId], references: [id])
+
+  @@map("notas")
+}
+
+// ─── Configuracion ─────────────────────────────────────────────────────────
+
+model Configuracion {
+  clave String @id
+  valor String
+
+  @@map("configuracion")
+}
