@@ -9,11 +9,15 @@ export class AuthController {
       const { username, password } = loginSchema.parse(req.body);
       const { token, user } = await authService.login(username, password);
 
+      // En producción (Vercel + Render = dominios distintos) la cookie necesita
+      // SameSite=None + Secure para que el browser la envíe en requests cross-site.
+      // En desarrollo alcanza con SameSite=Lax (mismo origen: localhost).
+      const isProduction = env.NODE_ENV === 'production';
       res.cookie('token', token, {
         httpOnly: true,
-        secure: env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 días
       });
 
       return res.status(200).json({
@@ -27,10 +31,11 @@ export class AuthController {
 
   async logout(req: Request, res: Response, next: NextFunction) {
     try {
+      const isProduction = env.NODE_ENV === 'production';
       res.clearCookie('token', {
         httpOnly: true,
-        secure: env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
       });
 
       return res.status(200).json({
