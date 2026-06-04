@@ -25,7 +25,7 @@ export const ClienteListSection: React.FC<ClienteListSectionProps> = ({
   clients,
   emptyMessage,
   badgeClass,
-  badgeLabel,
+  // badgeLabel no se usa en el JSX (se muestra el count en su lugar)
 }) => (
   <div className="card overflow-hidden">
     {/* Header */}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { reporteService, type PagoDelMes } from '../../services/reporte.service';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
-import { formatDate, formatCurrency, getMonthName } from '../../utils/format';
+import { formatDate, formatCurrency } from '../../utils/format';
 import { X, User, Phone, CreditCard } from 'lucide-react';
 
 interface PagosMesModalProps {

@@ -245,9 +245,10 @@ export const ReportesPage: React.FC = () => {
                   radius={[4, 4, 0, 0]}
                   name="Ingresos"
                   style={{ cursor: 'pointer' }}
-                  onClick={(entry: { mes: number; anio: number; label: string }) =>
-                    setSelectedMes({ mes: entry.mes, anio: entry.anio, label: entry.label })
-                  }
+                  onClick={(data: unknown) => {
+                    const entry = data as { mes: number; anio: number; label: string };
+                    setSelectedMes({ mes: entry.mes, anio: entry.anio, label: entry.label });
+                  }}
                 >
                   {ingresosMensuales.map((entry, index) => (
                     <Cell
