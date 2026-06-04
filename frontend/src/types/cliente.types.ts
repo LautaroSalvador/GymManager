@@ -14,6 +14,8 @@ export interface Cliente {
   nombre: string;
   dni: string | null;
   telefono: string | null;
+  calle: string | null;
+  altura: string | null;
   fechaAlta: string; // ISO format date string
   activo: boolean;
   createdAt: string; // ISO format timestamp
@@ -27,6 +29,8 @@ export interface ClienteConEstado {
   nombre: string;
   dni: string | null;
   telefono: string | null;
+  calle: string | null;
+  altura: string | null;
   fechaAlta: string;
   activo: boolean;
   estado: ClienteEstado;

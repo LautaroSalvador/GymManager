@@ -15,6 +15,8 @@ interface FormState {
   nombre: string;
   dni: string;
   telefono: string;
+  calle: string;
+  altura: string;
   fechaAlta: string;
 }
 
@@ -29,6 +31,8 @@ export const ClienteModal: React.FC<ClienteModalProps> = ({
     nombre: '',
     dni: '',
     telefono: '',
+    calle: '',
+    altura: '',
     fechaAlta: getTodayISO(),
   });
   const [submitting, setSubmitting] = useState(false);
@@ -41,6 +45,8 @@ export const ClienteModal: React.FC<ClienteModalProps> = ({
         nombre: cliente.nombre,
         dni: cliente.dni ?? '',
         telefono: cliente.telefono ?? '',
+        calle: cliente.calle ?? '',
+        altura: cliente.altura ?? '',
         fechaAlta: cliente.fechaAlta.slice(0, 10),
       });
     }
@@ -60,6 +66,8 @@ export const ClienteModal: React.FC<ClienteModalProps> = ({
         nombre: form.nombre.trim(),
         dni: form.dni.trim() || null,
         telefono: form.telefono.trim() || null,
+        calle: form.calle.trim() || null,
+        altura: form.altura.trim() || null,
         fechaAlta: form.fechaAlta,
       };
 
@@ -157,6 +165,35 @@ export const ClienteModal: React.FC<ClienteModalProps> = ({
               placeholder="+54 11 1234-5678"
               className="input-base"
             />
+          </div>
+
+          {/* Dirección */}
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-neutral-700">
+              Dirección <span className="text-neutral-400 font-normal">(opcional)</span>
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="cliente-calle"
+                name="calle"
+                type="text"
+                disabled={submitting}
+                value={form.calle}
+                onChange={handleChange}
+                placeholder="Nombre de calle"
+                className="input-base flex-1"
+              />
+              <input
+                id="cliente-altura"
+                name="altura"
+                type="text"
+                disabled={submitting}
+                value={form.altura}
+                onChange={handleChange}
+                placeholder="Altura"
+                className="input-base w-24"
+              />
+            </div>
           </div>
 
           {/* Fecha de alta */}

@@ -27,6 +27,8 @@ model Cliente {
   nombre    String
   dni       String?
   telefono  String?
+  calle     String?  // Nombre de la calle (opcional)
+  altura    String?  // Número de altura (opcional, String para admitir valores como "123B")
   fechaAlta DateTime @map("fecha_alta") @db.Date
   activo    Boolean  @default(true)
   createdAt DateTime @default(now()) @map("created_at")
