@@ -17,14 +17,18 @@ export class ReporteService {
     const totalClientesActivos = activeClients.length;
 
     const totalEsperado = totalClientesActivos * precioCuota;
-    const totalCobrado = await pagoRepository.sumMontoByPeriod(currentMonth, currentYear);
 
-    // Clients who paid this month
+    // Clients who paid this month (only active clients, matching dashboard logic)
     const activeClientsWithPayments = await clienteRepository.findActiveWithPaymentsForPeriod(
       currentMonth,
       currentYear
     );
     const clientesPagadosCount = activeClientsWithPayments.filter((c: any) => c.pagos.length > 0).length;
+
+    // Sum revenue only from active clients (same as dashboard)
+    const totalCobrado = activeClientsWithPayments
+      .filter((c: any) => c.pagos.length > 0)
+      .reduce((sum: number, c: any) => sum + c.pagos.reduce((s: number, p: { monto: any }) => s + Number(p.monto), 0), 0);
 
     const tasaCobranza = totalClientesActivos > 0 ? (clientesPagadosCount / totalClientesActivos) * 100 : 0;
 

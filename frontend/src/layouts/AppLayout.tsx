@@ -7,7 +7,6 @@ import {
   BarChart3,
   Settings,
   LogOut,
-  Dumbbell,
 } from 'lucide-react';
 
 export const AppLayout: React.FC = () => {
@@ -34,12 +33,12 @@ export const AppLayout: React.FC = () => {
 
         {/* Brand */}
         <div className="flex items-center gap-3 px-5 py-5 border-b border-neutral-100">
-          <div className="flex items-center justify-center w-9 h-9 bg-primary-600 rounded-lg text-white shrink-0">
-            <Dumbbell size={20} />
+          <div className="flex items-center justify-center w-9 h-9 rounded-lg overflow-hidden shrink-0">
+            <img src="/logo.png" alt="Gym O2 Logo" className="w-full h-full object-contain" />
           </div>
           <div className="min-w-0">
             <p className="text-base font-bold text-neutral-900 leading-none tracking-tight">
-              GymManager
+              Gym O2
             </p>
             <p className="text-xs text-neutral-400 mt-0.5">Panel de control</p>
           </div>
@@ -95,10 +94,10 @@ export const AppLayout: React.FC = () => {
         {/* Top header — mobile only */}
         <header className="md:hidden flex items-center justify-between h-14 px-4 bg-white border-b border-neutral-200 sticky top-0 z-40">
           <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-8 h-8 bg-primary-600 rounded-lg text-white">
-              <Dumbbell size={16} />
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg overflow-hidden">
+              <img src="/logo.png" alt="Gym O2 Logo" className="w-full h-full object-contain" />
             </div>
-            <span className="font-bold text-neutral-900 tracking-tight">GymManager</span>
+            <span className="font-bold text-neutral-900 tracking-tight">Gym O2</span>
           </div>
           <button
             onClick={handleLogout}
