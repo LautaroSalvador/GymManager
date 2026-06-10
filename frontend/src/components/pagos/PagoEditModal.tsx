@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { pagoService } from '../../services/pago.service';
 import { getMonthName, getCurrentPeriod } from '../../utils/format';
 import { X, AlertCircle, Banknote, ArrowLeftRight, MoreHorizontal } from 'lucide-react';
@@ -19,7 +19,7 @@ const MEDIOS: { value: MedioPagoOpcion; label: string; icon: React.ElementType }
   { value: 'Otro',          label: 'Otro',          icon: MoreHorizontal },
 ];
 
-const KNOWN_MEDIOS: MedioPagoOpcion[] = ['Efectivo', 'Transferencia'];
+
 
 function resolveInitialMedio(medioPago: string | null): { medio: MedioPagoOpcion; otro: string } {
   if (!medioPago || medioPago === 'Efectivo') return { medio: 'Efectivo', otro: '' };
