@@ -8,6 +8,7 @@ router.use(authMiddleware);
 
 router.post('/', pagoController.registrar);
 router.get('/cliente/:clienteId', pagoController.getByCliente);
+router.put('/:id', pagoController.update);
 router.delete('/:id', pagoController.delete);
 
 export default router;

@@ -51,6 +51,25 @@ export class PagoRepository {
     });
   }
 
+  async update(id: number, data: {
+    fechaPago?: Date;
+    monto?: number;
+    periodoMes?: number;
+    periodoAnio?: number;
+    medioPago?: string | null;
+  }) {
+    return prisma.pago.update({
+      where: { id },
+      data: {
+        ...(data.fechaPago !== undefined && { fechaPago: data.fechaPago }),
+        ...(data.monto !== undefined && { monto: new Prisma.Decimal(data.monto) }),
+        ...(data.periodoMes !== undefined && { periodoMes: data.periodoMes }),
+        ...(data.periodoAnio !== undefined && { periodoAnio: data.periodoAnio }),
+        ...(data.medioPago !== undefined && { medioPago: data.medioPago }),
+      },
+    });
+  }
+
   async delete(id: number) {
     return prisma.pago.delete({
       where: { id },

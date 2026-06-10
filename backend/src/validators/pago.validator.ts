@@ -11,3 +11,11 @@ export const createPagoSchema = z.object({
   periodoAnio: z.number().int().min(2000),
   medioPago: z.string().max(100).optional().nullable(),
 });
+
+export const updatePagoSchema = z.object({
+  fechaPago: z.coerce.date({ invalid_type_error: 'Invalid payment date' }).optional(),
+  monto: z.number().positive('Amount must be positive').optional(),
+  periodoMes: z.number().int().min(1).max(12).optional(),
+  periodoAnio: z.number().int().min(2000).optional(),
+  medioPago: z.string().max(100).optional().nullable(),
+});

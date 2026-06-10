@@ -6,10 +6,12 @@ import { pagoService } from '../services/pago.service';
 import { notaService } from '../services/nota.service';
 import { ClienteModal } from '../components/clientes/ClienteModal';
 import { PagoModal } from '../components/pagos/PagoModal';
+import { PagoEditModal } from '../components/pagos/PagoEditModal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { EmptyState } from '../components/ui/EmptyState';
 import { formatDate, formatCurrency, getMonthName } from '../utils/format';
+import type { Pago } from '../types/pago.types';
 import {
   ChevronLeft,
   Edit2,
@@ -58,6 +60,7 @@ export const ClienteDetallePage: React.FC = () => {
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPagoModal, setShowPagoModal] = useState(false);
+  const [editingPago, setEditingPago] = useState<Pago | null>(null);
   const [newNota, setNewNota] = useState('');
   const [savingNota, setSavingNota] = useState(false);
   const [deletingPagoId, setDeletingPagoId] = useState<number | null>(null);
@@ -300,7 +303,7 @@ export const ClienteDetallePage: React.FC = () => {
                     <th className="text-left px-4 py-2.5 text-xs font-semibold text-neutral-400 uppercase tracking-wider">
                       Fecha de pago
                     </th>
-                    <th className="px-4 py-2.5" />
+                    <th className="px-4 py-2.5 text-xs font-semibold text-neutral-400 uppercase tracking-wider" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-50">
@@ -328,14 +331,23 @@ export const ClienteDetallePage: React.FC = () => {
                           {formatDate(p.fechaPago)}
                         </td>
                         <td className="px-4 py-3">
-                          <button
-                            onClick={() => setConfirmPagoId(p.id)}
-                            disabled={deletingPagoId === p.id}
-                            className="opacity-0 group-hover:opacity-100 p-1.5 text-neutral-300 hover:text-danger-500 hover:bg-danger-50 rounded-lg transition-all"
-                            title="Eliminar pago"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                            <button
+                              onClick={() => setEditingPago(p)}
+                              className="p-1.5 text-neutral-300 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-all"
+                              title="Editar pago"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                            <button
+                              onClick={() => setConfirmPagoId(p.id)}
+                              disabled={deletingPagoId === p.id}
+                              className="p-1.5 text-neutral-300 hover:text-danger-500 hover:bg-danger-50 rounded-lg transition-all"
+                              title="Eliminar pago"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -427,6 +439,15 @@ export const ClienteDetallePage: React.FC = () => {
           clienteId={cliente.id}
           clienteNombre={cliente.nombre}
           onClose={() => setShowPagoModal(false)}
+          onSaved={refreshPagos}
+        />
+      )}
+
+      {editingPago && (
+        <PagoEditModal
+          pago={editingPago}
+          clienteNombre={cliente.nombre}
+          onClose={() => setEditingPago(null)}
           onSaved={refreshPagos}
         />
       )}

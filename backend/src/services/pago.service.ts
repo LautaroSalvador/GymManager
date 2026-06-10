@@ -43,6 +43,37 @@ export class PagoService {
     return pagoRepository.findByClienteId(clienteId);
   }
 
+  async actualizarPago(
+    id: number,
+    data: {
+      fechaPago?: Date;
+      monto?: number;
+      periodoMes?: number;
+      periodoAnio?: number;
+      medioPago?: string | null;
+    }
+  ) {
+    const payment = await pagoRepository.findById(id);
+    if (!payment) {
+      throw new AppError('Payment record not found', 404);
+    }
+
+    // If period is changing, check there's no duplicate for the same client
+    const newMes = data.periodoMes ?? payment.periodoMes;
+    const newAnio = data.periodoAnio ?? payment.periodoAnio;
+    if (newMes !== payment.periodoMes || newAnio !== payment.periodoAnio) {
+      const conflict = await pagoRepository.findUnique(payment.clienteId, newMes, newAnio);
+      if (conflict && conflict.id !== id) {
+        throw new AppError(
+          `Ya existe un pago registrado para el período ${newMes}/${newAnio}`,
+          400
+        );
+      }
+    }
+
+    return pagoRepository.update(id, data);
+  }
+
   async eliminarPago(id: number) {
     const payment = await pagoRepository.findById(id);
     if (!payment) {

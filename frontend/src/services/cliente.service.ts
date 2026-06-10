@@ -27,7 +27,7 @@ export const clienteService = {
     return api.post<Cliente>('/clientes', data);
   },
 
-  async update(id: number, data: Partial<{ nombre: string; dni: string | null; telefono: string | null; fechaAlta: string; activo: boolean }>): Promise<Cliente> {
+  async update(id: number, data: Partial<{ nombre: string; dni: string | null; telefono: string | null; calle: string | null; altura: string | null; fechaAlta: string; activo: boolean }>): Promise<Cliente> {
     return api.put<Cliente>(`/clientes/${id}`, data);
   },
 };

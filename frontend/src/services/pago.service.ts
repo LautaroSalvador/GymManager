@@ -13,6 +13,19 @@ export const pagoService = {
     return api.post<Pago>('/pagos', data);
   },
 
+  async update(
+    id: number,
+    data: {
+      fechaPago?: string;
+      monto?: number;
+      periodoMes?: number;
+      periodoAnio?: number;
+      medioPago?: string | null;
+    }
+  ): Promise<Pago> {
+    return api.put<Pago>(`/pagos/${id}`, data);
+  },
+
   async getByCliente(clienteId: number): Promise<Pago[]> {
     return api.get<Pago[]>(`/pagos/cliente/${clienteId}`);
   },
