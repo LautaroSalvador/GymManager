@@ -118,6 +118,7 @@ export const ClienteDetallePage: React.FC = () => {
         <PagoModal
           clienteId={cliente.id}
           clienteNombre={cliente.nombre}
+          mesesAdeudados={cliente.mesesAdeudados ?? []}
           onClose={() => setShowPagoModal(false)}
           onSaved={refreshPagos}
         />
