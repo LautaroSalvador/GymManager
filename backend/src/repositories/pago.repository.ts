@@ -76,6 +76,7 @@ export class PagoRepository {
     });
   }
 
+  /** Total cobrado de un período, sin importar el estado actual del cliente. */
   async sumMontoByPeriod(month: number, year: number): Promise<number> {
     const aggregate = await prisma.pago.aggregate({
       where: {
@@ -89,18 +90,18 @@ export class PagoRepository {
     return aggregate._sum.monto ? aggregate._sum.monto.toNumber() : 0;
   }
 
-  async getIngresosMensualesGroupByPeriod(limitMonths: number = 12) {
+  /**
+   * Total cobrado por período (mes/año) entre dos años inclusive.
+   * Incluye pagos de clientes dados de baja: la plata cobrada se cuenta igual.
+   */
+  async getIngresosMensuales(desdeAnio: number, hastaAnio: number) {
     const groups = await prisma.pago.groupBy({
       by: ['periodoAnio', 'periodoMes'],
+      where: { periodoAnio: { gte: desdeAnio, lte: hastaAnio } },
       _sum: { monto: true },
-      orderBy: [
-        { periodoAnio: 'desc' },
-        { periodoMes: 'desc' },
-      ],
-      take: limitMonths,
     });
 
-    return groups.map((g: { periodoAnio: number; periodoMes: number; _sum: { monto: Prisma.Decimal | null } }) => ({
+    return groups.map((g) => ({
       anio: g.periodoAnio,
       mes: g.periodoMes,
       total: g._sum.monto ? g._sum.monto.toNumber() : 0,

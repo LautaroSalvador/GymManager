@@ -68,7 +68,7 @@ El dashboard es la pantalla de inicio y debe mostrar de un vistazo:
 
 - **Ingresos mensuales:** Gráfico de barras con los ingresos cobrados mes a mes (últimos 12 meses).
 - **Clientes activos en el tiempo:** Gráfico de línea mostrando evolución de la cantidad de clientes activos mes a mes.
-- **Resumen del mes actual:** Total cobrado vs. total esperado (clientes activos × cuota).
+- **Resumen del mes actual:** Total cobrado vs. total esperado (clientes activos × cuota). El total cobrado incluye todos los pagos del mes, aunque el cliente se haya dado de baja después.
 - **Tasa de cobranza:** Porcentaje de clientes que pagaron en el mes actual.
 
 ### 4.5 Configuración

@@ -1,4 +1,5 @@
 import { clienteRepository } from '../repositories/cliente.repository';
+import { pagoRepository } from '../repositories/pago.repository';
 import { configService } from './config.service';
 import { clasificarCliente } from '../utils/clasificacion.utils';
 import { getBillingDate, getToday, normalizeDate } from '../utils/fecha.utils';
@@ -28,7 +29,6 @@ export class DashboardService {
     // Clientes activos con sus pagos del mes actual
     const clients = await clienteRepository.findActiveWithPaymentsForPeriod(currentMonth, currentYear);
 
-    let ingresosCobradosMesActual = 0;
     const cobrarHoy: DashboardCliente[] = [];
     const proximosVencer: DashboardCliente[] = [];
     const conDeuda: DashboardCliente[] = [];
@@ -36,8 +36,6 @@ export class DashboardService {
     for (const client of clients) {
       const hasPaid = client.pagos.length > 0;
       const estado = clasificarCliente(client.fechaAlta, hasPaid, today, umbral);
-
-      ingresosCobradosMesActual += client.pagos.reduce((sum, pago) => sum + pago.monto.toNumber(), 0);
 
       const clientInfo: DashboardCliente = {
         id: client.id,
@@ -59,6 +57,9 @@ export class DashboardService {
     const totalClientesActivos = clients.length;
     const clientesConDeuda = conDeuda.length;
     const clientesAlDia = totalClientesActivos - cobrarHoy.length - clientesConDeuda;
+
+    // Igual que en Reportes: todo lo cobrado del mes, sin importar el estado actual del cliente.
+    const ingresosCobradosMesActual = await pagoRepository.sumMontoByPeriod(currentMonth, currentYear);
 
     return {
       indicadores: {

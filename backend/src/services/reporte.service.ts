@@ -32,24 +32,25 @@ export class ReporteService {
 
     const totalEsperado = totalClientesActivos * precioCuota;
 
-    // Clients who paid this month (only active clients, matching dashboard logic)
+    // Tasa de cobranza: qué proporción de los clientes activos ya pagó el mes
     const activeClientsWithPayments = await clienteRepository.findActiveWithPaymentsForPeriod(
       currentMonth,
       currentYear
     );
-    const clientesQuePagaron = activeClientsWithPayments.filter((c) => c.pagos.length > 0);
-    const clientesPagadosCount = clientesQuePagaron.length;
+    const clientesPagadosCount = activeClientsWithPayments.filter((c) => c.pagos.length > 0).length;
 
-    // Sum revenue only from active clients (same as dashboard)
-    const totalCobrado = clientesQuePagaron.reduce(
-      (sum, c) => sum + c.pagos.reduce((subtotal, pago) => subtotal + pago.monto.toNumber(), 0),
-      0
-    );
+    // Total cobrado: todos los pagos del período, aunque el cliente se haya dado
+    // de baja después. Así coincide con la barra del mes en el gráfico de ingresos.
+    const totalCobrado = await pagoRepository.sumMontoByPeriod(currentMonth, currentYear);
 
     const tasaCobranza = totalClientesActivos > 0 ? (clientesPagadosCount / totalClientesActivos) * 100 : 0;
 
     // 2. Ingresos mensuales (últimos 12 meses), completando con 0 los meses sin pagos
-    const ingresosDb = await pagoRepository.getIngresosMensualesGroupByPeriod(12);
+    const ultimos12Meses = getLastMonths(today, 12);
+    const ingresosDb = await pagoRepository.getIngresosMensuales(
+      ultimos12Meses[0].anio,
+      currentYear
+    );
     const ingresosMensuales = this.fillLast12Months(today, ingresosDb);
 
     // 3. Clientes activos en el tiempo (últimos 12 meses)
