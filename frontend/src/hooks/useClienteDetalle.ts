@@ -42,6 +42,7 @@ export function useClienteDetalle(id: number) {
     refresh,
     refreshPagos,
     refreshNotas,
-    setCliente: cliente.setData,
+    // Recarga solo el cliente (ej: tras darlo de baja o reactivarlo, cambia su estado de deuda)
+    refreshCliente,
   };
 }

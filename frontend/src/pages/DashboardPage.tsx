@@ -2,12 +2,12 @@ import React from 'react';
 import { useDashboard } from '../hooks/useDashboard';
 import { StatCard } from '../components/dashboard/StatCard';
 import { ClienteListSection } from '../components/dashboard/ClienteListSection';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { PageLoading } from '../components/ui/PageLoading';
+import { PageError } from '../components/ui/PageError';
 import { formatCurrency } from '../utils/format';
 import {
   Users,
   CheckCircle2,
-  AlertCircle,
   DollarSign,
   Clock,
   CalendarClock,
@@ -19,29 +19,11 @@ export const DashboardPage: React.FC = () => {
   const { data, loading, error, refresh } = useDashboard();
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <div className="flex flex-col items-center gap-3 text-neutral-400">
-          <LoadingSpinner size="lg" />
-          <p className="text-sm">Cargando dashboard...</p>
-        </div>
-      </div>
-    );
+    return <PageLoading message="Cargando dashboard..." />;
   }
 
   if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <div className="flex items-center gap-2 text-danger-600 bg-danger-50 border border-danger-100 rounded-xl px-5 py-3">
-          <AlertCircle size={18} />
-          <span className="text-sm font-medium">{error}</span>
-        </div>
-        <button onClick={refresh} className="btn-secondary text-sm">
-          <RefreshCw size={15} />
-          Reintentar
-        </button>
-      </div>
-    );
+    return <PageError message={error} onRetry={refresh} />;
   }
 
   if (!data) return null;

@@ -1,49 +1,35 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import { clienteService } from '../services/cliente.service';
 import { ClienteModal } from '../components/clientes/ClienteModal';
+import { ClientesFiltros } from '../components/clientes/ClientesFiltros';
+import type { FiltroClientes } from '../components/clientes/ClientesFiltros';
+import { ClientesTabla } from '../components/clientes/ClientesTabla';
+import { ClientesListaMobile } from '../components/clientes/ClientesListaMobile';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { EmptyState } from '../components/ui/EmptyState';
 import { PageHeader } from '../components/ui/PageHeader';
-import { formatDate } from '../utils/format';
+import { PageLoading } from '../components/ui/PageLoading';
+import { PageError } from '../components/ui/PageError';
 import { useApiData } from '../hooks/useApiData';
 import { tieneEstado } from '../types/cliente.types';
-import type { ClienteConEstado, ClienteEstado, ClienteListItem } from '../types/cliente.types';
-import {
-  Plus,
-  Search,
-  Users,
-  ChevronRight,
-  Phone,
-  AlertCircle,
-  RefreshCw,
-} from 'lucide-react';
+import type { ClienteListItem } from '../types/cliente.types';
+import { Plus, Users } from 'lucide-react';
 
-// ─── Tipos ──────────────────────────────────────────────────────────────────
-
-type FilterType = 'activos' | 'inactivos' | 'todos' | 'con_deuda';
-
-// ─── Badge de estado de pago ─────────────────────────────────────────────────
-
-const ESTADO_CONFIG: Record<ClienteEstado, { label: string; className: string }> = {
-  AL_DIA:           { label: 'Al día',       className: 'badge-success' },
-  COBRAR_HOY:       { label: 'Cobrar hoy',   className: 'badge-danger' },
-  PROXIMO_A_VENCER: { label: 'Próximo',      className: 'badge-warning' },
-  CON_DEUDA:        { label: 'Con deuda',    className: 'badge-danger' },
-};
-
-const EstadoBadge: React.FC<{ cliente: ClienteConEstado }> = ({ cliente }) => {
-  const cfg = ESTADO_CONFIG[cliente.estado];
-  const meses = cliente.mesesAdeudados.length;
-  const label = cliente.estado === 'CON_DEUDA' && meses > 1 ? `${cfg.label} (${meses} meses)` : cfg.label;
-  return <span className={`badge ${cfg.className}`}>{label}</span>;
-};
-
-// ─── Página ──────────────────────────────────────────────────────────────────
+function getEmptyStateText(filter: FiltroClientes, search: string): { title: string; description: string } {
+  if (search) {
+    return { title: 'Sin resultados', description: `No se encontraron clientes para "${search}"` };
+  }
+  if (filter === 'con_deuda') {
+    return { title: 'Sin clientes con deuda', description: '¡Todos los clientes están al día!' };
+  }
+  if (filter === 'activos') {
+    return { title: 'No hay clientes', description: 'Todavía no hay clientes activos. ¡Agrega el primero!' };
+  }
+  return { title: 'No hay clientes', description: 'No hay clientes con este filtro.' };
+}
 
 export const ClientesPage: React.FC = () => {
-  const [filter, setFilter] = useState<FilterType>('activos');
+  const [filter, setFilter] = useState<FiltroClientes>('activos');
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
@@ -57,7 +43,7 @@ export const ClientesPage: React.FC = () => {
     return clienteService.getAll({ activo: filter === 'inactivos' ? false : undefined });
   }, [filter]);
 
-  const { data, loading, error, refresh: fetchData } = useApiData(
+  const { data, loading, error, refresh } = useApiData(
     fetchClientes,
     'No se pudo cargar la lista de clientes.'
   );
@@ -87,7 +73,7 @@ export const ClientesPage: React.FC = () => {
     setTogglingId(confirmToggle.id);
     try {
       await clienteService.update(confirmToggle.id, { activo: !confirmToggle.activo });
-      fetchData();
+      refresh();
     } catch {
       // silently handled
     } finally {
@@ -96,12 +82,44 @@ export const ClientesPage: React.FC = () => {
     }
   };
 
-  const filterTabs: { key: FilterType; label: string }[] = [
-    { key: 'activos',   label: 'Activos' },
-    { key: 'con_deuda', label: 'Con deuda' },
-    { key: 'inactivos', label: 'Inactivos' },
-    { key: 'todos',     label: 'Todos' },
-  ];
+  const renderContent = () => {
+    if (loading) {
+      return <PageLoading message="Cargando clientes..." />;
+    }
+    if (error) {
+      return <PageError message={error} onRetry={refresh} />;
+    }
+    if (displayList.length === 0) {
+      const { title, description } = getEmptyStateText(filter, search);
+      return (
+        <div className="card">
+          <EmptyState
+            icon={Users}
+            title={title}
+            description={description}
+            action={
+              !search && filter === 'activos' ? (
+                <button onClick={() => setShowModal(true)} className="btn-primary text-sm">
+                  <Plus size={15} />
+                  Nuevo cliente
+                </button>
+              ) : undefined
+            }
+          />
+        </div>
+      );
+    }
+    return (
+      <>
+        <ClientesTabla
+          clientes={displayList}
+          togglingId={togglingId}
+          onToggleActivo={setConfirmToggle}
+        />
+        <ClientesListaMobile clientes={displayList} />
+      </>
+    );
+  };
 
   return (
     <div>
@@ -120,216 +138,20 @@ export const ClientesPage: React.FC = () => {
         }
       />
 
-      {/* Filters + Search */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-5">
-        {/* Filter tabs */}
-        <div className="flex items-center gap-1 bg-neutral-100 rounded-lg p-1 shrink-0">
-          {filterTabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setFilter(tab.key)}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-150 ${
-                filter === tab.key
-                  ? 'bg-white text-neutral-900 shadow-sm'
-                  : 'text-neutral-500 hover:text-neutral-700'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+      <ClientesFiltros
+        filter={filter}
+        onFilterChange={setFilter}
+        search={search}
+        onSearchChange={setSearch}
+      />
 
-        {/* Search */}
-        <div className="relative flex-1">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-neutral-400">
-            <Search size={16} />
-          </div>
-          <input
-            id="clientes-search"
-            type="text"
-            placeholder="Buscar por nombre, DNI o teléfono..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="input-base pl-9"
-          />
-        </div>
-      </div>
-
-      {/* Content */}
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="flex flex-col items-center gap-3 text-neutral-400">
-            <LoadingSpinner size="lg" />
-            <p className="text-sm">Cargando clientes...</p>
-          </div>
-        </div>
-      ) : error ? (
-        <div className="flex flex-col items-center gap-4 py-12">
-          <div className="flex items-center gap-2 text-danger-600 bg-danger-50 border border-danger-100 rounded-xl px-5 py-3">
-            <AlertCircle size={16} />
-            <span className="text-sm">{error}</span>
-          </div>
-          <button onClick={fetchData} className="btn-secondary text-sm">
-            <RefreshCw size={14} />
-            Reintentar
-          </button>
-        </div>
-      ) : displayList.length === 0 ? (
-        <div className="card">
-          <EmptyState
-            icon={Users}
-            title={search ? 'Sin resultados' : filter === 'con_deuda' ? 'Sin clientes con deuda' : 'No hay clientes'}
-            description={
-              search
-                ? `No se encontraron clientes para "${search}"`
-                : filter === 'con_deuda'
-                ? '¡Todos los clientes están al día!'
-                : filter === 'activos'
-                ? 'Todavía no hay clientes activos. ¡Agrega el primero!'
-                : 'No hay clientes con este filtro.'
-            }
-            action={
-              !search && filter === 'activos' ? (
-                <button onClick={() => setShowModal(true)} className="btn-primary text-sm">
-                  <Plus size={15} />
-                  Nuevo cliente
-                </button>
-              ) : undefined
-            }
-          />
-        </div>
-      ) : (
-        <>
-          {/* Desktop — tabla */}
-          <div className="card hidden sm:block overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-neutral-100">
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                    Nombre
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                    DNI
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                    Teléfono
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                    Alta
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                    Estado
-                  </th>
-                  <th className="px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-50">
-                {displayList.map((c) => (
-                  <tr key={c.id} className="hover:bg-neutral-50 transition-colors">
-                    <td className="px-5 py-3.5">
-                      <Link
-                        to={`/clientes/${c.id}`}
-                        className="font-medium text-neutral-800 hover:text-primary-600 transition-colors"
-                      >
-                        {c.nombre}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3.5 text-neutral-500">
-                      {c.dni ?? <span className="text-neutral-300">—</span>}
-                    </td>
-                    <td className="px-4 py-3.5 text-neutral-500">
-                      {c.telefono ? (
-                        <a
-                          href={`tel:${c.telefono}`}
-                          className="flex items-center gap-1.5 hover:text-primary-600 transition-colors"
-                        >
-                          <Phone size={13} />
-                          {c.telefono}
-                        </a>
-                      ) : (
-                        <span className="text-neutral-300">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3.5 text-neutral-500">
-                      {formatDate(c.fechaAlta)}
-                    </td>
-                    <td className="px-4 py-3.5">
-                      {tieneEstado(c) ? (
-                        <EstadoBadge cliente={c} />
-                      ) : (
-                        <span className={`badge ${c.activo ? 'badge-success' : 'badge-neutral'}`}>
-                          {c.activo ? 'Activo' : 'Inactivo'}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setConfirmToggle(c)}
-                          disabled={togglingId === c.id}
-                          className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-colors ${
-                            c.activo
-                              ? 'border-danger-100 text-danger-600 hover:bg-danger-50'
-                              : 'border-success-100 text-success-600 hover:bg-success-50'
-                          }`}
-                        >
-                          {togglingId === c.id ? '...' : c.activo ? 'Dar de baja' : 'Reactivar'}
-                        </button>
-                        <Link
-                          to={`/clientes/${c.id}`}
-                          className="p-1.5 text-neutral-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                        >
-                          <ChevronRight size={16} />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile — cards */}
-          <div className="sm:hidden space-y-2">
-            {displayList.map((c) => (
-              <Link
-                key={c.id}
-                to={`/clientes/${c.id}`}
-                className="card card-hover p-4 flex items-center justify-between"
-              >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="text-sm font-semibold text-neutral-800 truncate">
-                      {c.nombre}
-                    </p>
-                    {tieneEstado(c) ? (
-                      <EstadoBadge cliente={c} />
-                    ) : (
-                      <span className={`badge ${c.activo ? 'badge-success' : 'badge-neutral'}`}>
-                        {c.activo ? 'Activo' : 'Inactivo'}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-neutral-400">Alta: {formatDate(c.fechaAlta)}</p>
-                  {c.telefono && (
-                    <p className="text-xs text-neutral-400 flex items-center gap-1 mt-0.5">
-                      <Phone size={11} />
-                      {c.telefono}
-                    </p>
-                  )}
-                </div>
-                <ChevronRight size={18} className="text-neutral-300 shrink-0" />
-              </Link>
-            ))}
-          </div>
-        </>
-      )}
+      {renderContent()}
 
       {/* New client modal */}
       {showModal && (
         <ClienteModal
           onClose={() => setShowModal(false)}
-          onSaved={fetchData}
+          onSaved={refresh}
         />
       )}
 

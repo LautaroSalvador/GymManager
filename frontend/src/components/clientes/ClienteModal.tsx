@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { clienteService } from '../../services/cliente.service';
 import type { Cliente } from '../../types/cliente.types';
 import { getTodayISO } from '../../utils/format';
-import { X, AlertCircle } from 'lucide-react';
+import { Modal, FormError } from '../ui/Modal';
 
 interface ClienteModalProps {
   /** If provided, the modal is in edit mode. */
@@ -83,161 +83,137 @@ export const ClienteModal: React.FC<ClienteModalProps> = ({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="card w-full max-w-md p-6 animate-in fade-in zoom-in-95 duration-150">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-base font-semibold text-neutral-900">
-            {isEditing ? 'Editar cliente' : 'Nuevo cliente'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors"
-          >
-            <X size={18} />
-          </button>
+    <Modal title={isEditing ? 'Editar cliente' : 'Nuevo cliente'} onClose={onClose} size="md">
+      {error && <FormError message={error} />}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Nombre */}
+        <div className="space-y-1.5">
+          <label htmlFor="cliente-nombre" className="block text-sm font-medium text-neutral-700">
+            Nombre completo <span className="text-danger-500">*</span>
+          </label>
+          <input
+            id="cliente-nombre"
+            name="nombre"
+            maxLength={100}
+            type="text"
+            required
+            disabled={submitting}
+            value={form.nombre}
+            onChange={handleChange}
+            placeholder="Juan Pérez"
+            className="input-base"
+          />
         </div>
 
-        {/* Error */}
-        {error && (
-          <div className="flex items-start gap-2.5 p-3 rounded-lg bg-danger-50 border border-danger-100 text-danger-600 text-sm mb-4">
-            <AlertCircle size={15} className="shrink-0 mt-0.5" />
-            <span>{error}</span>
-          </div>
-        )}
+        {/* DNI */}
+        <div className="space-y-1.5">
+          <label htmlFor="cliente-dni" className="block text-sm font-medium text-neutral-700">
+            DNI <span className="text-neutral-400 font-normal">(opcional)</span>
+          </label>
+          <input
+            id="cliente-dni"
+            name="dni"
+            maxLength={20}
+            type="text"
+            disabled={submitting}
+            value={form.dni}
+            onChange={handleChange}
+            placeholder="30.000.000"
+            className="input-base"
+          />
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Nombre */}
-          <div className="space-y-1.5">
-            <label htmlFor="cliente-nombre" className="block text-sm font-medium text-neutral-700">
-              Nombre completo <span className="text-danger-500">*</span>
-            </label>
+        {/* Teléfono */}
+        <div className="space-y-1.5">
+          <label htmlFor="cliente-telefono" className="block text-sm font-medium text-neutral-700">
+            Teléfono <span className="text-neutral-400 font-normal">(opcional)</span>
+          </label>
+          <input
+            id="cliente-telefono"
+            name="telefono"
+            maxLength={30}
+            type="tel"
+            disabled={submitting}
+            value={form.telefono}
+            onChange={handleChange}
+            placeholder="+54 11 1234-5678"
+            className="input-base"
+          />
+        </div>
+
+        {/* Dirección */}
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium text-neutral-700">
+            Dirección <span className="text-neutral-400 font-normal">(opcional)</span>
+          </label>
+          <div className="flex gap-2">
             <input
-              id="cliente-nombre"
-              name="nombre"
+              id="cliente-calle"
+              name="calle"
               maxLength={100}
               type="text"
-              required
               disabled={submitting}
-              value={form.nombre}
+              value={form.calle}
               onChange={handleChange}
-              placeholder="Juan Pérez"
-              className="input-base"
+              placeholder="Nombre de calle"
+              className="input-base flex-1"
             />
-          </div>
-
-          {/* DNI */}
-          <div className="space-y-1.5">
-            <label htmlFor="cliente-dni" className="block text-sm font-medium text-neutral-700">
-              DNI <span className="text-neutral-400 font-normal">(opcional)</span>
-            </label>
             <input
-              id="cliente-dni"
-              name="dni"
-              maxLength={20}
+              id="cliente-altura"
+              name="altura"
+              maxLength={10}
               type="text"
               disabled={submitting}
-              value={form.dni}
+              value={form.altura}
               onChange={handleChange}
-              placeholder="30.000.000"
-              className="input-base"
+              placeholder="Altura"
+              className="input-base w-24"
             />
           </div>
+        </div>
 
-          {/* Teléfono */}
-          <div className="space-y-1.5">
-            <label htmlFor="cliente-telefono" className="block text-sm font-medium text-neutral-700">
-              Teléfono <span className="text-neutral-400 font-normal">(opcional)</span>
-            </label>
-            <input
-              id="cliente-telefono"
-              name="telefono"
-              maxLength={30}
-              type="tel"
-              disabled={submitting}
-              value={form.telefono}
-              onChange={handleChange}
-              placeholder="+54 11 1234-5678"
-              className="input-base"
-            />
-          </div>
+        {/* Fecha de alta */}
+        <div className="space-y-1.5">
+          <label htmlFor="cliente-fecha-alta" className="block text-sm font-medium text-neutral-700">
+            Fecha de alta <span className="text-danger-500">*</span>
+          </label>
+          <input
+            id="cliente-fecha-alta"
+            name="fechaAlta"
+            type="date"
+            required
+            disabled={submitting || isEditing}
+            value={form.fechaAlta}
+            onChange={handleChange}
+            className="input-base"
+          />
+          {isEditing && (
+            <p className="text-xs text-neutral-400">
+              La fecha de alta no se puede modificar (determina el vencimiento mensual).
+            </p>
+          )}
+        </div>
 
-          {/* Dirección */}
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-neutral-700">
-              Dirección <span className="text-neutral-400 font-normal">(opcional)</span>
-            </label>
-            <div className="flex gap-2">
-              <input
-                id="cliente-calle"
-                name="calle"
-                maxLength={100}
-                type="text"
-                disabled={submitting}
-                value={form.calle}
-                onChange={handleChange}
-                placeholder="Nombre de calle"
-                className="input-base flex-1"
-              />
-              <input
-                id="cliente-altura"
-                name="altura"
-                maxLength={10}
-                type="text"
-                disabled={submitting}
-                value={form.altura}
-                onChange={handleChange}
-                placeholder="Altura"
-                className="input-base w-24"
-              />
-            </div>
-          </div>
-
-          {/* Fecha de alta */}
-          <div className="space-y-1.5">
-            <label htmlFor="cliente-fecha-alta" className="block text-sm font-medium text-neutral-700">
-              Fecha de alta <span className="text-danger-500">*</span>
-            </label>
-            <input
-              id="cliente-fecha-alta"
-              name="fechaAlta"
-              type="date"
-              required
-              disabled={submitting || isEditing}
-              value={form.fechaAlta}
-              onChange={handleChange}
-              className="input-base"
-            />
-            {isEditing && (
-              <p className="text-xs text-neutral-400">
-                La fecha de alta no se puede modificar (determina el vencimiento mensual).
-              </p>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={submitting}
-              className="btn-secondary flex-1"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="btn-primary flex-1"
-            >
-              {submitting ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Dar de alta'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {/* Actions */}
+        <div className="flex gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="btn-secondary flex-1"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="btn-primary flex-1"
+          >
+            {submitting ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Dar de alta'}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 };
