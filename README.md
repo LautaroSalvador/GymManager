@@ -160,5 +160,3 @@ frontend/src/
 ├── types/
 └── utils/
 ```
-
-La especificación funcional completa está en [`PRD.md`](PRD.md).
