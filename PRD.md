@@ -75,7 +75,7 @@ El dashboard es la pantalla de inicio y debe mostrar de un vistazo:
 
 - **Precio de la cuota mensual:** Valor editable. Al cambiarlo no afecta registros históricos.
 - **Umbral de alerta "próximo a vencer":** Cantidad de días antes del vencimiento para incluir al cliente en esa lista (default: 3).
-- **Cambio de contraseña:** El dueño puede cambiar su contraseña desde esta pantalla.
+- **Cambio de contraseña:** El dueño puede cambiar su contraseña desde esta pantalla (mínimo 12 caracteres). Al cambiarla se cierran todas las sesiones abiertas en otros dispositivos.
 
 ### 4.6 Autenticación
 
@@ -110,6 +110,7 @@ Las siguientes funcionalidades quedan explícitamente fuera de la versión inici
 | id | UUID / serial | Clave primaria |
 | username| VARCHAR | usuario Acceso |
 | password_hash| VARCHAR |Password creade con bcript |
+| token_version| INT |Se incrementa al cambiar la contraseña; invalida las sesiones (JWT) emitidas antes |
 | created_at| TIMESTAMP |Fecha de creación |
 Observación:
 

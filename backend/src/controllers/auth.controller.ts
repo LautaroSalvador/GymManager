@@ -52,7 +52,16 @@ export class AuthController {
       const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
       const userId = req.user!.id;
 
-      await authService.changePassword(userId, currentPassword, newPassword);
+      const token = await authService.changePassword(userId, currentPassword, newPassword);
+
+      // Las demás sesiones quedaron revocadas; este dispositivo recibe un token nuevo.
+      const isProduction = env.NODE_ENV === 'production';
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 días
+      });
 
       return res.status(200).json({
         success: true,
