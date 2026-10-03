@@ -25,3 +25,8 @@ export const createClienteSchema = z.object({
 export const updateClienteSchema = createClienteSchema.partial().extend({
   activo: z.boolean().optional(),
 });
+
+export const listClientesQuerySchema = z.object({
+  activo: z.enum(['true', 'false']).transform((val) => val === 'true').optional(),
+  search: z.string().trim().max(100).optional(),
+});

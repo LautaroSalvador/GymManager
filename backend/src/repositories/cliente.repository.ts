@@ -59,6 +59,20 @@ export class ClienteRepository {
   }
 
   /**
+   * Busca un cliente activo con ese DNI, opcionalmente excluyendo un id
+   * (para no chocar consigo mismo al editar).
+   */
+  async findActiveByDni(dni: string, excludeId?: number) {
+    return prisma.cliente.findFirst({
+      where: {
+        dni,
+        activo: true,
+        ...(excludeId !== undefined && { id: { not: excludeId } }),
+      },
+    });
+  }
+
+  /**
    * Finds all active clients and includes their payments for a specific period
    * (month and year) to help with dashboard classification.
    */

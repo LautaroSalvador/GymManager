@@ -1,4 +1,3 @@
-import { Cliente } from '@prisma/client';
 import { CreateClienteData, UpdateClienteData } from '../types/cliente.types';
 import { clienteRepository } from '../repositories/cliente.repository';
 import { configService } from './config.service';
@@ -9,10 +8,9 @@ import { AppError } from '../utils/errors';
 export class ClienteService {
   async createCliente(data: CreateClienteData) {
     if (data.dni) {
-      const activeClients = await clienteRepository.findAll({ activo: true });
-      const dup = activeClients.find((c: Cliente) => c.dni === data.dni);
-      if (dup) {
-        throw new AppError(`Client with DNI ${data.dni} already exists as an active client`, 400);
+      const duplicate = await clienteRepository.findActiveByDni(data.dni);
+      if (duplicate) {
+        throw new AppError(`Ya existe un cliente activo con DNI ${data.dni}`, 400);
       }
     }
     return clienteRepository.create(data);
@@ -28,10 +26,9 @@ export class ClienteService {
     }
 
     if (data.dni && data.dni !== client.dni) {
-      const activeClients = await clienteRepository.findAll({ activo: true });
-      const dup = activeClients.find((c: Cliente) => c.dni === data.dni && c.id !== id);
-      if (dup) {
-        throw new AppError(`Client with DNI ${data.dni} already exists`, 400);
+      const duplicate = await clienteRepository.findActiveByDni(data.dni, id);
+      if (duplicate) {
+        throw new AppError(`Ya existe un cliente activo con DNI ${data.dni}`, 400);
       }
     }
 
@@ -64,7 +61,7 @@ export class ClienteService {
 
     const clients = await clienteRepository.findActiveWithPaymentsForPeriod(currentMonth, currentYear);
 
-    return clients.map((c: any) => {
+    return clients.map((c) => {
       const hasPaid = c.pagos.length > 0;
       const estado = clasificarCliente(c.fechaAlta, hasPaid, today, umbral);
       return {

@@ -10,6 +10,12 @@ export class NotaRepository {
     });
   }
 
+  async findById(id: number) {
+    return prisma.nota.findUnique({
+      where: { id },
+    });
+  }
+
   async findByClienteId(clienteId: number) {
     return prisma.nota.findMany({
       where: { clienteId },

@@ -1,31 +1,17 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { configService } from '../services/config.service';
 import { updateConfigSchema } from '../validators/config.validator';
+import { asyncHandler } from '../utils/asyncHandler';
 
-export class ConfigController {
-  async get(req: Request, res: Response, next: NextFunction) {
-    try {
-      const data = await configService.getConfig();
-      return res.status(200).json({
-        success: true,
-        data,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
+export const configController = {
+  get: asyncHandler(async (_req: Request, res: Response) => {
+    const data = await configService.getConfig();
+    res.status(200).json({ success: true, data });
+  }),
 
-  async update(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { precioCuota, umbralAlertaDias } = updateConfigSchema.parse(req.body);
-      const data = await configService.updateConfig(precioCuota, umbralAlertaDias);
-      return res.status(200).json({
-        success: true,
-        data,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-}
-export const configController = new ConfigController();
+  update: asyncHandler(async (req: Request, res: Response) => {
+    const { precioCuota, umbralAlertaDias } = updateConfigSchema.parse(req.body);
+    const data = await configService.updateConfig(precioCuota, umbralAlertaDias);
+    res.status(200).json({ success: true, data });
+  }),
+};

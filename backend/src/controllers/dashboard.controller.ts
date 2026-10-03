@@ -1,25 +1,13 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { dashboardService } from '../services/dashboard.service';
+import { dashboardQuerySchema } from '../validators/dashboard.validator';
+import { asyncHandler } from '../utils/asyncHandler';
 
-export class DashboardController {
-  async get(req: Request, res: Response, next: NextFunction) {
-    try {
-      let referenceDate: Date | undefined = undefined;
-      if (req.query.date) {
-        referenceDate = new Date(req.query.date as string);
-        if (isNaN(referenceDate.getTime())) {
-          referenceDate = undefined;
-        }
-      }
-
-      const data = await dashboardService.getDashboardData(referenceDate);
-      return res.status(200).json({
-        success: true,
-        data,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-}
-export const dashboardController = new DashboardController();
+export const dashboardController = {
+  get: asyncHandler(async (req: Request, res: Response) => {
+    const { date } = dashboardQuerySchema.parse(req.query);
+    const referenceDate = date ? new Date(date) : undefined;
+    const data = await dashboardService.getDashboardData(referenceDate);
+    res.status(200).json({ success: true, data });
+  }),
+};

@@ -1,7 +1,21 @@
+import { Cliente } from '@prisma/client';
 import { pagoRepository } from '../repositories/pago.repository';
 import { clienteRepository } from '../repositories/cliente.repository';
 import { configService } from './config.service';
 import { normalizeDate } from '../utils/fecha.utils';
+
+interface IngresoMensual {
+  anio: number;
+  mes: number;
+  total: number;
+}
+
+interface PuntoHistorico {
+  anio: number;
+  mes: number;
+  label: string;
+  valor: number;
+}
 
 export class ReporteService {
   async getReportesData() {
@@ -23,22 +37,22 @@ export class ReporteService {
       currentMonth,
       currentYear
     );
-    const clientesPagadosCount = activeClientsWithPayments.filter((c: any) => c.pagos.length > 0).length;
+    const clientesQuePagaron = activeClientsWithPayments.filter((c) => c.pagos.length > 0);
+    const clientesPagadosCount = clientesQuePagaron.length;
 
     // Sum revenue only from active clients (same as dashboard)
-    const totalCobrado = activeClientsWithPayments
-      .filter((c: any) => c.pagos.length > 0)
-      .reduce((sum: number, c: any) => sum + c.pagos.reduce((s: number, p: { monto: any }) => s + Number(p.monto), 0), 0);
+    const totalCobrado = clientesQuePagaron.reduce(
+      (sum, c) => sum + c.pagos.reduce((subtotal, pago) => subtotal + pago.monto.toNumber(), 0),
+      0
+    );
 
     const tasaCobranza = totalClientesActivos > 0 ? (clientesPagadosCount / totalClientesActivos) * 100 : 0;
 
-    // 2. Ingresos mensuales (últimos 12 meses)
-    // We get groups from DB, then fill missing months with 0
+    // 2. Ingresos mensuales (últimos 12 meses), completando con 0 los meses sin pagos
     const ingresosDb = await pagoRepository.getIngresosMensualesGroupByPeriod(12);
-    const ingresosMensuales = this.fillLast12Months(today, ingresosDb, 'total');
+    const ingresosMensuales = this.fillLast12Months(today, ingresosDb);
 
     // 3. Clientes activos en el tiempo (últimos 12 meses)
-    // For each of the last 12 months, we count how many active clients have fechaAlta <= end of that month
     const clientesActivosEvolucion = this.getEvolucionClientesActivos(activeClients, today);
 
     return {
@@ -54,22 +68,21 @@ export class ReporteService {
     };
   }
 
-  private fillLast12Months(today: Date, dbData: any[], valueKey: string) {
-    const result = [];
+  private fillLast12Months(today: Date, ingresos: IngresoMensual[]): PuntoHistorico[] {
+    const result: PuntoHistorico[] = [];
     const tempDate = new Date(today.getTime());
 
     for (let i = 0; i < 12; i++) {
       const year = tempDate.getUTCFullYear();
       const month = tempDate.getUTCMonth() + 1; // 1-indexed
 
-      const dbMatch = dbData.find((d: any) => d.anio === year && d.mes === month);
-      const val = dbMatch ? dbMatch[valueKey] : 0;
+      const match = ingresos.find((d) => d.anio === year && d.mes === month);
 
       result.unshift({
         anio: year,
         mes: month,
         label: `${this.getMesAbreviado(month)} ${year}`,
-        valor: val,
+        valor: match ? match.total : 0,
       });
 
       // Move to previous month
@@ -79,8 +92,8 @@ export class ReporteService {
     return result;
   }
 
-  private getEvolucionClientesActivos(activeClients: any[], today: Date) {
-    const result = [];
+  private getEvolucionClientesActivos(activeClients: Cliente[], today: Date): PuntoHistorico[] {
+    const result: PuntoHistorico[] = [];
     const tempDate = new Date(today.getTime());
 
     for (let i = 0; i < 12; i++) {
@@ -91,10 +104,7 @@ export class ReporteService {
       const endOfMonth = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
       // Count active clients whose fechaAlta <= end of this target month
-      const count = activeClients.filter((c: any) => {
-        const fechaAlta = new Date(c.fechaAlta);
-        return fechaAlta <= endOfMonth;
-      }).length;
+      const count = activeClients.filter((c) => c.fechaAlta <= endOfMonth).length;
 
       result.unshift({
         anio: year,
@@ -115,10 +125,11 @@ export class ReporteService {
    */
   async getPagosPorMes(mes: number, anio: number) {
     const pagos = await pagoRepository.findByPeriod(mes, anio);
-    return pagos.map((p: any) => ({
+    return pagos.map((p) => ({
       id: p.id,
-      monto: parseFloat(p.monto.toString()),
+      monto: p.monto.toNumber(),
       fechaPago: p.fechaPago,
+      medioPago: p.medioPago,
       cliente: p.cliente,
     }));
   }

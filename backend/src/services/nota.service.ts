@@ -12,11 +12,11 @@ export class NotaService {
   }
 
   async eliminarNota(id: number) {
-    try {
-      return await notaRepository.delete(id);
-    } catch (e) {
+    const nota = await notaRepository.findById(id);
+    if (!nota) {
       throw new AppError('Note not found', 404);
     }
+    return notaRepository.delete(id);
   }
 
   async getNotasByCliente(clienteId: number) {
