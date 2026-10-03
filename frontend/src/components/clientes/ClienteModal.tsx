@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { clienteService } from '../../services/cliente.service';
 import type { Cliente } from '../../types/cliente.types';
 import { getTodayISO } from '../../utils/format';
@@ -20,6 +20,20 @@ interface FormState {
   fechaAlta: string;
 }
 
+function getInitialForm(cliente?: Cliente | null): FormState {
+  if (!cliente) {
+    return { nombre: '', dni: '', telefono: '', calle: '', altura: '', fechaAlta: getTodayISO() };
+  }
+  return {
+    nombre: cliente.nombre,
+    dni: cliente.dni ?? '',
+    telefono: cliente.telefono ?? '',
+    calle: cliente.calle ?? '',
+    altura: cliente.altura ?? '',
+    fechaAlta: cliente.fechaAlta.slice(0, 10),
+  };
+}
+
 export const ClienteModal: React.FC<ClienteModalProps> = ({
   cliente,
   onClose,
@@ -27,30 +41,11 @@ export const ClienteModal: React.FC<ClienteModalProps> = ({
 }) => {
   const isEditing = Boolean(cliente);
 
-  const [form, setForm] = useState<FormState>({
-    nombre: '',
-    dni: '',
-    telefono: '',
-    calle: '',
-    altura: '',
-    fechaAlta: getTodayISO(),
-  });
+  // El modal se monta cada vez que se abre, así que alcanza con inicializar
+  // el formulario una sola vez a partir del cliente (sin useEffect).
+  const [form, setForm] = useState<FormState>(() => getInitialForm(cliente));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Populate form when editing
-  useEffect(() => {
-    if (cliente) {
-      setForm({
-        nombre: cliente.nombre,
-        dni: cliente.dni ?? '',
-        telefono: cliente.telefono ?? '',
-        calle: cliente.calle ?? '',
-        altura: cliente.altura ?? '',
-        fechaAlta: cliente.fechaAlta.slice(0, 10),
-      });
-    }
-  }, [cliente]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));

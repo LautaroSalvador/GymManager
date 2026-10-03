@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useConfiguracion } from '../hooks/useConfiguracion';
 import { configService } from '../services/config.service';
 import { authService } from '../services/auth.service';
@@ -77,12 +77,6 @@ const ConfigGeneral: React.FC<ConfigGeneralProps> = ({
   const [umbral, setUmbral] = useState(umbralAlertaDias.toString());
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-
-  // Sync when props change (e.g. after reload)
-  useEffect(() => {
-    setPrecio(precioCuota.toString());
-    setUmbral(umbralAlertaDias.toString());
-  }, [precioCuota, umbralAlertaDias]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

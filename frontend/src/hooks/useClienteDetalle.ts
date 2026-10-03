@@ -1,73 +1,47 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { clienteService } from '../services/cliente.service';
 import { pagoService } from '../services/pago.service';
 import { notaService } from '../services/nota.service';
-import type { Cliente, Nota } from '../types/cliente.types';
-import type { Pago } from '../types/pago.types';
+import { useApiData } from './useApiData';
 
 export function useClienteDetalle(id: number) {
-  const [cliente, setCliente] = useState<Cliente | null>(null);
-  const [pagos, setPagos] = useState<Pago[]>([]);
-  const [notas, setNotas] = useState<Nota[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const fetchCliente = useCallback(() => clienteService.getById(id), [id]);
+  const fetchPagos = useCallback(() => pagoService.getByCliente(id), [id]);
+  const fetchNotas = useCallback(() => notaService.getByCliente(id), [id]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [clienteData, pagosData, notasData] = await Promise.all([
-        clienteService.getById(id),
-        pagoService.getByCliente(id),
-        notaService.getByCliente(id),
-      ]);
-      setCliente(clienteData);
-      setPagos(pagosData);
-      setNotas(notasData);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al cargar el cliente';
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
+  const cliente = useApiData(fetchCliente, 'Error al cargar el cliente');
+  const pagos = useApiData(fetchPagos, 'Error al cargar los pagos');
+  const notas = useApiData(fetchNotas, 'Error al cargar las notas');
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  // Spinner de página solo en la primera carga (o al pasar a otro cliente);
+  // las recargas posteriores mantienen los datos en pantalla.
+  const loading = cliente.loading && cliente.data?.id !== id;
+
+  const { refresh: refreshCliente } = cliente;
+  const { refresh: refreshPagosOnly } = pagos;
+  const { refresh: refreshNotas } = notas;
+
+  const refresh = useCallback(() => {
+    refreshCliente();
+    refreshPagosOnly();
+    refreshNotas();
+  }, [refreshCliente, refreshPagosOnly, refreshNotas]);
 
   // Recarga pagos y también el cliente: su estado de deuda depende de los pagos.
-  const refreshPagos = useCallback(async () => {
-    try {
-      const [clienteData, pagosData] = await Promise.all([
-        clienteService.getById(id),
-        pagoService.getByCliente(id),
-      ]);
-      setCliente(clienteData);
-      setPagos(pagosData);
-    } catch {
-      // silently fail on partial refresh
-    }
-  }, [id]);
-
-  const refreshNotas = useCallback(async () => {
-    try {
-      const data = await notaService.getByCliente(id);
-      setNotas(data);
-    } catch {
-      // silently fail on partial refresh
-    }
-  }, [id]);
+  const refreshPagos = useCallback(() => {
+    refreshCliente();
+    refreshPagosOnly();
+  }, [refreshCliente, refreshPagosOnly]);
 
   return {
-    cliente,
-    pagos,
-    notas,
+    cliente: cliente.data,
+    pagos: pagos.data ?? [],
+    notas: notas.data ?? [],
     loading,
-    error,
-    refresh: load,
+    error: cliente.error ?? pagos.error ?? notas.error,
+    refresh,
     refreshPagos,
     refreshNotas,
-    setCliente,
+    setCliente: cliente.setData,
   };
 }

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { clienteService } from '../services/cliente.service';
 import { ClienteModal } from '../components/clientes/ClienteModal';
@@ -7,7 +7,9 @@ import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { EmptyState } from '../components/ui/EmptyState';
 import { PageHeader } from '../components/ui/PageHeader';
 import { formatDate } from '../utils/format';
-import type { Cliente, ClienteConEstado, ClienteEstado } from '../types/cliente.types';
+import { useApiData } from '../hooks/useApiData';
+import { tieneEstado } from '../types/cliente.types';
+import type { ClienteConEstado, ClienteEstado, ClienteListItem } from '../types/cliente.types';
 import {
   Plus,
   Search,
@@ -45,45 +47,28 @@ export const ClientesPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
-  const [confirmToggle, setConfirmToggle] = useState<Cliente | null>(null);
+  const [confirmToggle, setConfirmToggle] = useState<ClienteListItem | null>(null);
 
-  // Estado unificado: usamos dos listas según el filtro activo
-  const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [clientesConEstado, setClientesConEstado] = useState<ClienteConEstado[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      if (filter === 'con_deuda' || filter === 'activos') {
-        // Siempre cargamos con estado para poder mostrar badges en activos
-        const data = await clienteService.getConEstado();
-        setClientesConEstado(data);
-        setClientes([]);
-      } else {
-        const activo = filter === 'inactivos' ? false : undefined;
-        const data = await clienteService.getAll({ activo });
-        setClientes(data);
-        setClientesConEstado([]);
-      }
-    } catch {
-      setError('No se pudo cargar la lista de clientes.');
-    } finally {
-      setLoading(false);
+  // Activos y "con deuda" se cargan con estado de pago para mostrar badges.
+  const fetchClientes = useCallback((): Promise<ClienteListItem[]> => {
+    if (filter === 'activos' || filter === 'con_deuda') {
+      return clienteService.getConEstado();
     }
+    return clienteService.getAll({ activo: filter === 'inactivos' ? false : undefined });
   }, [filter]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  const { data, loading, error, refresh: fetchData } = useApiData(
+    fetchClientes,
+    'No se pudo cargar la lista de clientes.'
+  );
 
   // Filtrado client-side
-  const filteredConEstado = useMemo(() => {
-    let list = clientesConEstado;
+  const displayList = useMemo(() => {
+    let list = data ?? [];
     if (filter === 'con_deuda') {
-      list = list.filter((c) => c.estado === 'CON_DEUDA' || c.estado === 'COBRAR_HOY');
+      list = list.filter(
+        (c) => tieneEstado(c) && (c.estado === 'CON_DEUDA' || c.estado === 'COBRAR_HOY')
+      );
     }
     if (search.trim()) {
       const term = search.toLowerCase();
@@ -95,21 +80,7 @@ export const ClientesPage: React.FC = () => {
       );
     }
     return list;
-  }, [clientesConEstado, filter, search]);
-
-  const filteredClientes = useMemo(() => {
-    if (!search.trim()) return clientes;
-    const term = search.toLowerCase();
-    return clientes.filter(
-      (c) =>
-        c.nombre.toLowerCase().includes(term) ||
-        (c.dni ?? '').includes(term) ||
-        (c.telefono ?? '').includes(term)
-    );
-  }, [clientes, search]);
-
-  const useConEstado = filter === 'activos' || filter === 'con_deuda';
-  const displayList = useConEstado ? filteredConEstado : filteredClientes;
+  }, [data, filter, search]);
 
   const handleToggleActivo = async () => {
     if (!confirmToggle) return;
@@ -283,8 +254,8 @@ export const ClientesPage: React.FC = () => {
                       {formatDate(c.fechaAlta)}
                     </td>
                     <td className="px-4 py-3.5">
-                      {useConEstado && 'estado' in c ? (
-                        <EstadoBadge cliente={c as ClienteConEstado} />
+                      {tieneEstado(c) ? (
+                        <EstadoBadge cliente={c} />
                       ) : (
                         <span className={`badge ${c.activo ? 'badge-success' : 'badge-neutral'}`}>
                           {c.activo ? 'Activo' : 'Inactivo'}
@@ -294,7 +265,7 @@ export const ClientesPage: React.FC = () => {
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => setConfirmToggle(c as Cliente)}
+                          onClick={() => setConfirmToggle(c)}
                           disabled={togglingId === c.id}
                           className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-colors ${
                             c.activo
@@ -331,8 +302,8 @@ export const ClientesPage: React.FC = () => {
                     <p className="text-sm font-semibold text-neutral-800 truncate">
                       {c.nombre}
                     </p>
-                    {useConEstado && 'estado' in c ? (
-                      <EstadoBadge cliente={c as ClienteConEstado} />
+                    {tieneEstado(c) ? (
+                      <EstadoBadge cliente={c} />
                     ) : (
                       <span className={`badge ${c.activo ? 'badge-success' : 'badge-neutral'}`}>
                         {c.activo ? 'Activo' : 'Inactivo'}

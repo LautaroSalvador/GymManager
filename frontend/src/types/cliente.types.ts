@@ -48,3 +48,10 @@ export interface ClienteConEstado {
   estado: ClienteEstado;
   mesesAdeudados: Periodo[];
 }
+
+/** Elemento del listado de clientes: con estado de pago (activos) o sin él (inactivos/todos). */
+export type ClienteListItem = Cliente | ClienteConEstado;
+
+export function tieneEstado(cliente: ClienteListItem): cliente is ClienteConEstado {
+  return 'estado' in cliente && cliente.estado !== null && cliente.estado !== undefined;
+}

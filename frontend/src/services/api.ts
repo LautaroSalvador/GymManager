@@ -1,11 +1,9 @@
 import type { ApiResponse } from '../types/api.types';
 
-// En desarrollo Vite proxea /api → localhost:3000 (ver vite.config.ts).
-// En producción (Vercel) no existe ese proxy, así que VITE_API_URL debe
-// apuntar a la URL real del backend en Render, ej:
-//   VITE_API_URL=https://gymmanager-backend.onrender.com/api
+// La API siempre se llama con una ruta relativa (mismo origen):
+// - En desarrollo, Vite proxea /api → localhost:3000 (ver vite.config.ts).
+// - En producción, Vercel reescribe /api/* hacia el backend en Render (ver vercel.json).
 const API_BASE = '/api';
-
 
 class ApiClient {
   private async request<T>(
@@ -44,7 +42,7 @@ class ApiClient {
       }
       
       return data as T;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`API Error on ${endpoint}:`, error);
       throw error;
     }
@@ -54,7 +52,7 @@ class ApiClient {
     return this.request<T>(endpoint, { method: 'GET', ...options });
   }
 
-  async post<T>(endpoint: string, body?: any, options?: RequestInit): Promise<T> {
+  async post<T>(endpoint: string, body?: unknown, options?: RequestInit): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: body instanceof FormData ? body : JSON.stringify(body),
@@ -62,7 +60,7 @@ class ApiClient {
     });
   }
 
-  async put<T>(endpoint: string, body?: any, options?: RequestInit): Promise<T> {
+  async put<T>(endpoint: string, body?: unknown, options?: RequestInit): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: body instanceof FormData ? body : JSON.stringify(body),
