@@ -39,6 +39,13 @@ export class PagoRepository {
     });
   }
 
+  async findPeriodosPagadosByCliente(clienteId: number) {
+    return prisma.pago.findMany({
+      where: { clienteId },
+      select: { periodoMes: true, periodoAnio: true },
+    });
+  }
+
   async findUnique(clienteId: number, periodoMes: number, periodoAnio: number) {
     return prisma.pago.findUnique({
       where: {

@@ -55,6 +55,14 @@ export function getMonthName(month: number): string {
 }
 
 /**
+ * Format a list of periods as readable text.
+ * e.g. [{ mes: 5, anio: 2026 }, { mes: 6, anio: 2026 }] → "Mayo 2026, Junio 2026"
+ */
+export function formatPeriodos(periodos: { mes: number; anio: number }[]): string {
+  return periodos.map((p) => `${getMonthName(p.mes)} ${p.anio}`).join(', ');
+}
+
+/**
  * Get today's date as ISO "YYYY-MM-DD" string in local time.
  */
 export function getTodayISO(): string {

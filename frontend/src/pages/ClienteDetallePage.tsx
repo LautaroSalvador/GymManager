@@ -10,7 +10,7 @@ import { PagoEditModal } from '../components/pagos/PagoEditModal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { EmptyState } from '../components/ui/EmptyState';
-import { formatDate, formatCurrency, getMonthName } from '../utils/format';
+import { formatDate, formatCurrency, getMonthName, formatPeriodos } from '../utils/format';
 import type { Pago } from '../types/pago.types';
 import {
   ChevronLeft,
@@ -211,6 +211,19 @@ export const ClienteDetallePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {cliente.mesesAdeudados && cliente.mesesAdeudados.length > 0 && (
+        <div className="flex items-start gap-2.5 p-4 rounded-xl bg-danger-50 border border-danger-100 text-danger-700 text-sm">
+          <AlertCircle size={16} className="shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold">
+              Debe {cliente.mesesAdeudados.length}{' '}
+              {cliente.mesesAdeudados.length === 1 ? 'mes' : 'meses'}
+            </p>
+            <p className="text-danger-600">{formatPeriodos(cliente.mesesAdeudados)}</p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Left column: datos + pagos */}

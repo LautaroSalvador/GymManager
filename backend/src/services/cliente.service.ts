@@ -1,8 +1,9 @@
 import { CreateClienteData, UpdateClienteData } from '../types/cliente.types';
 import { clienteRepository } from '../repositories/cliente.repository';
+import { pagoRepository } from '../repositories/pago.repository';
 import { configService } from './config.service';
 import { clasificarCliente } from '../utils/clasificacion.utils';
-import { getToday } from '../utils/fecha.utils';
+import { getToday, toPeriodo } from '../utils/fecha.utils';
 import { AppError } from '../utils/errors';
 
 export class ClienteService {
@@ -52,12 +53,34 @@ export class ClienteService {
     return activoNuevo ? { fechaReactivacion: getToday() } : { fechaBaja: getToday() };
   }
 
+  /**
+   * Devuelve el cliente con sus notas y su estado de pago. Si está activo,
+   * incluye los meses adeudados (actual y anteriores).
+   */
   async getClienteById(id: number) {
     const client = await clienteRepository.findById(id);
     if (!client) {
       throw new AppError('Client not found', 404);
     }
-    return client;
+
+    if (!client.activo) {
+      return { ...client, estado: null, mesesAdeudados: [] };
+    }
+
+    const [periodosPagados, config] = await Promise.all([
+      pagoRepository.findPeriodosPagadosByCliente(id),
+      configService.getConfig(),
+    ]);
+
+    const { estado, mesesAdeudados } = clasificarCliente({
+      fechaAlta: client.fechaAlta,
+      fechaReactivacion: client.fechaReactivacion,
+      periodosPagados: periodosPagados.map(toPeriodo),
+      today: getToday(),
+      umbralDias: config.umbralAlertaDias,
+    });
+
+    return { ...client, estado, mesesAdeudados };
   }
 
   async getAllClientes(options?: { activo?: boolean; search?: string }) {
@@ -65,22 +88,22 @@ export class ClienteService {
   }
 
   /**
-   * Devuelve todos los clientes activos con su estado de pago del mes actual.
+   * Devuelve todos los clientes activos con su estado de pago.
    * Estado: AL_DIA | COBRAR_HOY | PROXIMO_A_VENCER | CON_DEUDA
    */
   async getAllClientesConEstado() {
     const today = getToday();
-    const currentYear = today.getUTCFullYear();
-    const currentMonth = today.getUTCMonth() + 1;
-
     const config = await configService.getConfig();
-    const umbral = config.umbralAlertaDias;
-
-    const clients = await clienteRepository.findActiveWithPaymentsForPeriod(currentMonth, currentYear);
+    const clients = await clienteRepository.findActiveWithPeriodosPagados();
 
     return clients.map((c) => {
-      const hasPaid = c.pagos.length > 0;
-      const estado = clasificarCliente(c.fechaAlta, hasPaid, today, umbral);
+      const { estado, mesesAdeudados } = clasificarCliente({
+        fechaAlta: c.fechaAlta,
+        fechaReactivacion: c.fechaReactivacion,
+        periodosPagados: c.pagos.map(toPeriodo),
+        today,
+        umbralDias: config.umbralAlertaDias,
+      });
       return {
         id: c.id,
         nombre: c.nombre,
@@ -89,6 +112,7 @@ export class ClienteService {
         fechaAlta: c.fechaAlta,
         activo: c.activo,
         estado,
+        mesesAdeudados,
       };
     });
   }

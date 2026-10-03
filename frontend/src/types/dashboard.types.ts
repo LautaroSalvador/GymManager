@@ -4,7 +4,9 @@ export interface DashboardCliente {
   dni: string | null;
   telefono: string | null;
   fechaAlta: string;
+  /** Vencimiento del mes actual o, si tiene deuda, del mes impago más viejo. */
   fechaVencimiento: string;
+  mesesAdeudados: number;
 }
 
 export interface DashboardData {

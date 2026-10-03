@@ -36,10 +36,15 @@ export function useClienteDetalle(id: number) {
     load();
   }, [load]);
 
+  // Recarga pagos y también el cliente: su estado de deuda depende de los pagos.
   const refreshPagos = useCallback(async () => {
     try {
-      const data = await pagoService.getByCliente(id);
-      setPagos(data);
+      const [clienteData, pagosData] = await Promise.all([
+        clienteService.getById(id),
+        pagoService.getByCliente(id),
+      ]);
+      setCliente(clienteData);
+      setPagos(pagosData);
     } catch {
       // silently fail on partial refresh
     }

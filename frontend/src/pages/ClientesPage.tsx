@@ -4,7 +4,7 @@ import { clienteService } from '../services/cliente.service';
 import { ClienteModal } from '../components/clientes/ClienteModal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { EmptyState } from '../components/ui/EmptyState';;
+import { EmptyState } from '../components/ui/EmptyState';
 import { PageHeader } from '../components/ui/PageHeader';
 import { formatDate } from '../utils/format';
 import type { Cliente, ClienteConEstado, ClienteEstado } from '../types/cliente.types';
@@ -31,9 +31,11 @@ const ESTADO_CONFIG: Record<ClienteEstado, { label: string; className: string }>
   CON_DEUDA:        { label: 'Con deuda',    className: 'badge-danger' },
 };
 
-const EstadoBadge: React.FC<{ estado: ClienteEstado }> = ({ estado }) => {
-  const cfg = ESTADO_CONFIG[estado];
-  return <span className={`badge ${cfg.className}`}>{cfg.label}</span>;
+const EstadoBadge: React.FC<{ cliente: ClienteConEstado }> = ({ cliente }) => {
+  const cfg = ESTADO_CONFIG[cliente.estado];
+  const meses = cliente.mesesAdeudados.length;
+  const label = cliente.estado === 'CON_DEUDA' && meses > 1 ? `${cfg.label} (${meses} meses)` : cfg.label;
+  return <span className={`badge ${cfg.className}`}>{label}</span>;
 };
 
 // ─── Página ──────────────────────────────────────────────────────────────────
@@ -282,7 +284,7 @@ export const ClientesPage: React.FC = () => {
                     </td>
                     <td className="px-4 py-3.5">
                       {useConEstado && 'estado' in c ? (
-                        <EstadoBadge estado={(c as ClienteConEstado).estado} />
+                        <EstadoBadge cliente={c as ClienteConEstado} />
                       ) : (
                         <span className={`badge ${c.activo ? 'badge-success' : 'badge-neutral'}`}>
                           {c.activo ? 'Activo' : 'Inactivo'}
@@ -330,7 +332,7 @@ export const ClientesPage: React.FC = () => {
                       {c.nombre}
                     </p>
                     {useConEstado && 'estado' in c ? (
-                      <EstadoBadge estado={(c as ClienteConEstado).estado} />
+                      <EstadoBadge cliente={c as ClienteConEstado} />
                     ) : (
                       <span className={`badge ${c.activo ? 'badge-success' : 'badge-neutral'}`}>
                         {c.activo ? 'Activo' : 'Inactivo'}

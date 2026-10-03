@@ -60,7 +60,9 @@ export const ClienteListSection: React.FC<ClienteListSectionProps> = ({
                   {c.nombre}
                 </p>
                 <p className="text-xs text-neutral-400 mt-0.5">
-                  Vence: {formatDate(c.fechaVencimiento)}
+                  {c.mesesAdeudados > 0
+                    ? `Debe ${c.mesesAdeudados} ${c.mesesAdeudados === 1 ? 'mes' : 'meses'} · desde ${formatDate(c.fechaVencimiento)}`
+                    : `Vence: ${formatDate(c.fechaVencimiento)}`}
                 </p>
               </div>
               {c.telefono && (

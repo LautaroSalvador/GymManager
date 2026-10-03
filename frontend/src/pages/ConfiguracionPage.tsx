@@ -383,13 +383,13 @@ export const ConfiguracionPage: React.FC = () => {
           <li className="flex items-start gap-2.5">
             <span className="badge badge-danger mt-0.5">Con deuda</span>
             <span className="text-neutral-500">
-              Clientes cuyo vencimiento ya pasó en este mes y no registraron pago.
+              Clientes con al menos un mes vencido sin pagar, de este mes o de meses anteriores.
             </span>
           </li>
           <li className="flex items-start gap-2.5">
             <span className="badge badge-success mt-0.5">Al día</span>
             <span className="text-neutral-500">
-              Clientes con pago registrado para el mes actual.
+              Clientes que no deben ningún mes vencido.
             </span>
           </li>
         </ul>

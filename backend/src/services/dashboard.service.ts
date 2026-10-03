@@ -2,7 +2,7 @@ import { clienteRepository } from '../repositories/cliente.repository';
 import { pagoRepository } from '../repositories/pago.repository';
 import { configService } from './config.service';
 import { clasificarCliente } from '../utils/clasificacion.utils';
-import { getBillingDate, getToday, normalizeDate } from '../utils/fecha.utils';
+import { getBillingDate, getToday, normalizeDate, toPeriodo } from '../utils/fecha.utils';
 
 interface DashboardCliente {
   id: number;
@@ -10,7 +10,9 @@ interface DashboardCliente {
   dni: string | null;
   telefono: string | null;
   fechaAlta: Date;
+  /** Vencimiento del mes actual o, si tiene deuda, del mes impago más viejo. */
   fechaVencimiento: Date;
+  mesesAdeudados: number;
 }
 
 const byNombre = (a: DashboardCliente, b: DashboardCliente) => a.nombre.localeCompare(b.nombre);
@@ -26,16 +28,23 @@ export class DashboardService {
     const config = await configService.getConfig();
     const umbral = config.umbralAlertaDias;
 
-    // Clientes activos con sus pagos del mes actual
-    const clients = await clienteRepository.findActiveWithPaymentsForPeriod(currentMonth, currentYear);
+    // Clientes activos con los períodos de todos sus pagos
+    const clients = await clienteRepository.findActiveWithPeriodosPagados();
 
     const cobrarHoy: DashboardCliente[] = [];
     const proximosVencer: DashboardCliente[] = [];
     const conDeuda: DashboardCliente[] = [];
 
     for (const client of clients) {
-      const hasPaid = client.pagos.length > 0;
-      const estado = clasificarCliente(client.fechaAlta, hasPaid, today, umbral);
+      const { estado, mesesAdeudados } = clasificarCliente({
+        fechaAlta: client.fechaAlta,
+        fechaReactivacion: client.fechaReactivacion,
+        periodosPagados: client.pagos.map(toPeriodo),
+        today,
+        umbralDias: umbral,
+      });
+
+      const periodoVencimiento = mesesAdeudados[0] ?? { anio: currentYear, mes: currentMonth };
 
       const clientInfo: DashboardCliente = {
         id: client.id,
@@ -43,7 +52,8 @@ export class DashboardService {
         dni: client.dni,
         telefono: client.telefono,
         fechaAlta: client.fechaAlta,
-        fechaVencimiento: getBillingDate(client.fechaAlta, currentYear, currentMonth),
+        fechaVencimiento: getBillingDate(client.fechaAlta, periodoVencimiento.anio, periodoVencimiento.mes),
+        mesesAdeudados: mesesAdeudados.length,
       };
 
       if (estado === 'COBRAR_HOY') cobrarHoy.push(clientInfo);
@@ -71,6 +81,7 @@ export class DashboardService {
       listas: {
         cobrarHoy: cobrarHoy.sort(byNombre),
         proximosVencer: proximosVencer.sort(byVencimiento),
+        // El que debe desde hace más tiempo, primero
         conDeuda: conDeuda.sort(byVencimiento),
       },
     };

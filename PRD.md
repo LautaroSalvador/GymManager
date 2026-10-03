@@ -57,7 +57,7 @@ El dashboard es la pantalla de inicio y debe mostrar de un vistazo:
 
 - **Lista "Cobrar hoy":** Clientes cuyo vencimiento es el día de hoy y aún no pagaron el mes en curso.
 - **Lista "Próximos a vencer":** Clientes que vencen en los próximos N días (configurable, default: 3 días).
-- **Lista "Con deuda":** Clientes que ya vencieron y no pagaron.
+- **Lista "Con deuda":** Clientes con al menos un mes vencido sin pagar (del mes actual o de meses anteriores), indicando cuántos meses deben.
 - **Indicadores numéricos rápidos:**
   - Total de clientes activos.
   - Clientes al día este mes.
@@ -247,8 +247,10 @@ Caso borde: clientes con alta el día 29, 30 o 31 en meses más cortos → usar 
 
 - **Cobrar hoy:** `día de hoy == día_vencimiento` AND no tiene pago del mes actual.
 - **Próximos a vencer:** `día de hoy < día_vencimiento` AND `día_vencimiento - hoy <= umbral_días` AND no tiene pago del mes actual.
-- **Con deuda:** `día de hoy > día_vencimiento` AND no tiene pago del mes actual.
-- **Al día:** tiene pago registrado para el mes actual.
+- **Con deuda:** tiene al menos un mes vencido sin pago. Se revisan todos los meses desde la fecha de alta (o desde la última reactivación, para no cobrar los meses en que estuvo de baja) hasta hoy. Para el mes actual, vencido significa `día de hoy > día_vencimiento`. Tiene prioridad sobre las demás categorías.
+- **Al día:** no debe ningún mes vencido (pagó el mes actual o todavía no le venció).
+
+Nota: los clientes cargados desde la libreta deben tener registrados los pagos de meses anteriores; de lo contrario aparecen con deuda.
 
 ---
 

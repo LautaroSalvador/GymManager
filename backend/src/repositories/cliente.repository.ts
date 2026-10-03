@@ -80,6 +80,19 @@ export class ClienteRepository {
   }
 
   /**
+   * Clientes activos con los períodos de todos sus pagos, para calcular
+   * deuda del mes actual y de meses anteriores.
+   */
+  async findActiveWithPeriodosPagados() {
+    return prisma.cliente.findMany({
+      where: { activo: true },
+      include: {
+        pagos: { select: { periodoMes: true, periodoAnio: true } },
+      },
+    });
+  }
+
+  /**
    * Finds all active clients and includes their payments for a specific period
    * (month and year) to help with dashboard classification.
    */

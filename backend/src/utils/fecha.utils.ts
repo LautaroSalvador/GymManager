@@ -60,6 +60,11 @@ export interface Periodo {
   mes: number; // 1-12
 }
 
+/** Convierte los campos de un pago (periodoMes/periodoAnio) a un Periodo. */
+export function toPeriodo(pago: { periodoMes: number; periodoAnio: number }): Periodo {
+  return { anio: pago.periodoAnio, mes: pago.periodoMes };
+}
+
 /**
  * Devuelve los últimos `count` meses (incluido el de `today`), del más viejo
  * al más nuevo. Parte siempre del día 1 para evitar el desborde de fechas:

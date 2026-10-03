@@ -2,6 +2,12 @@ import type { Pago } from './pago.types';
 
 export type ClienteEstado = 'AL_DIA' | 'COBRAR_HOY' | 'PROXIMO_A_VENCER' | 'CON_DEUDA';
 
+/** Mes de cuota: mes 1-12 y año. */
+export interface Periodo {
+  anio: number;
+  mes: number;
+}
+
 export interface Nota {
   id: number;
   clienteId: number;
@@ -23,6 +29,10 @@ export interface Cliente {
   createdAt: string; // ISO format timestamp
   notas?: Nota[];
   pagos?: Pago[];
+  /** Solo en el detalle: null si el cliente está inactivo. */
+  estado?: ClienteEstado | null;
+  /** Solo en el detalle: meses vencidos sin pagar, del más viejo al más nuevo. */
+  mesesAdeudados?: Periodo[];
 }
 
 /** Cliente activo con estado de pago del mes actual */
@@ -36,4 +46,5 @@ export interface ClienteConEstado {
   fechaAlta: string;
   activo: boolean;
   estado: ClienteEstado;
+  mesesAdeudados: Periodo[];
 }
