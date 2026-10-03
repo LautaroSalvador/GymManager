@@ -1,4 +1,5 @@
 import { Cliente } from '@prisma/client';
+import { CreateClienteData, UpdateClienteData } from '../types/cliente.types';
 import { clienteRepository } from '../repositories/cliente.repository';
 import { configService } from './config.service';
 import { clasificarCliente } from '../utils/clasificacion.utils';
@@ -6,7 +7,7 @@ import { normalizeDate } from '../utils/fecha.utils';
 import { AppError } from '../utils/errors';
 
 export class ClienteService {
-  async createCliente(data: { nombre: string; dni?: string | null; telefono?: string | null; fechaAlta: Date }) {
+  async createCliente(data: CreateClienteData) {
     if (data.dni) {
       const activeClients = await clienteRepository.findAll({ activo: true });
       const dup = activeClients.find((c: Cliente) => c.dni === data.dni);
@@ -19,7 +20,7 @@ export class ClienteService {
 
   async updateCliente(
     id: number,
-    data: { nombre?: string; dni?: string | null; telefono?: string | null; fechaAlta?: Date; activo?: boolean }
+    data: UpdateClienteData
   ) {
     const client = await clienteRepository.findById(id);
     if (!client) {

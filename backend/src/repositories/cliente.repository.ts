@@ -1,13 +1,16 @@
 import { prisma } from '../config/prisma';
+import { CreateClienteData, UpdateClienteData } from '../types/cliente.types';
 import { Prisma } from '@prisma/client';
 
 export class ClienteRepository {
-  async create(data: { nombre: string; dni?: string | null; telefono?: string | null; fechaAlta: Date }) {
+  async create(data: CreateClienteData) {
     return prisma.cliente.create({
       data: {
         nombre: data.nombre,
         dni: data.dni,
         telefono: data.telefono,
+        calle: data.calle,
+        altura: data.altura,
         fechaAlta: data.fechaAlta,
         activo: true,
       },
@@ -16,7 +19,7 @@ export class ClienteRepository {
 
   async update(
     id: number,
-    data: { nombre?: string; dni?: string | null; telefono?: string | null; fechaAlta?: Date; activo?: boolean }
+    data: UpdateClienteData
   ) {
     return prisma.cliente.update({
       where: { id },

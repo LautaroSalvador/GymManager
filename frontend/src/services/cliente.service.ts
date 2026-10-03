@@ -23,7 +23,7 @@ export const clienteService = {
     return api.get<Cliente>(`/clientes/${id}`);
   },
 
-  async create(data: { nombre: string; dni?: string | null; telefono?: string | null; fechaAlta: string }): Promise<Cliente> {
+  async create(data: { nombre: string; dni?: string | null; telefono?: string | null; calle?: string | null; altura?: string | null; fechaAlta: string }): Promise<Cliente> {
     return api.post<Cliente>('/clientes', data);
   },
 
