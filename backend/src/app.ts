@@ -7,6 +7,9 @@ import { env } from './config/env';
 
 const app = express();
 
+// Render (y Vercel) ponen proxies delante: sin esto req.ip sería la IP del proxy.
+app.set('trust proxy', env.TRUST_PROXY_HOPS);
+
 // ─── Orígenes permitidos para CORS ──────────────────────────────────────────
 // En desarrollo: localhost.
 // En producción: la(s) URL(s) de Vercel definidas en la variable FRONTEND_URL.

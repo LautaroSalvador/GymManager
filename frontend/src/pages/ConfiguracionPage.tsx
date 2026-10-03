@@ -197,8 +197,8 @@ const CambiarContrasena: React.FC = () => {
       setStatus({ type: 'error', message: 'Ingresá tu contraseña actual.' });
       return;
     }
-    if (newPassword.length < 6) {
-      setStatus({ type: 'error', message: 'La nueva contraseña debe tener al menos 6 caracteres.' });
+    if (newPassword.length < 12) {
+      setStatus({ type: 'error', message: 'La nueva contraseña debe tener al menos 12 caracteres.' });
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -261,7 +261,7 @@ const CambiarContrasena: React.FC = () => {
             onChange={(e) => setNewPassword(e.target.value)}
             disabled={saving}
             className="input-base pr-10"
-            placeholder="Mínimo 6 caracteres"
+            placeholder="Mínimo 12 caracteres"
             autoComplete="new-password"
           />
           <button

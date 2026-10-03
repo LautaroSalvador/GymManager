@@ -3,11 +3,16 @@ import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
+const MIN_PASSWORD_LENGTH = 12;
+
 async function main() {
   console.log('Seeding database...');
 
-  // Get admin password from environment, default to 'admin123' if not set
-  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  // La contraseña del admin es obligatoria y debe ser larga: no hay valor por defecto.
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword || adminPassword.length < MIN_PASSWORD_LENGTH) {
+    throw new Error(`ADMIN_PASSWORD es obligatoria y debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres`);
+  }
   const passwordHash = await bcrypt.hash(adminPassword, 10);
 
   // Seed Usuario
