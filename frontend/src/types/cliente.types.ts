@@ -18,6 +18,8 @@ export interface Cliente {
   altura: string | null;
   fechaAlta: string; // ISO format date string
   activo: boolean;
+  fechaBaja: string | null; // última baja
+  fechaReactivacion: string | null; // última reactivación
   createdAt: string; // ISO format timestamp
   notas?: Nota[];
   pagos?: Pago[];

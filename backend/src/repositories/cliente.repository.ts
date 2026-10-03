@@ -19,7 +19,7 @@ export class ClienteRepository {
 
   async update(
     id: number,
-    data: UpdateClienteData
+    data: UpdateClienteData & { fechaBaja?: Date; fechaReactivacion?: Date }
   ) {
     return prisma.cliente.update({
       where: { id },
@@ -55,6 +55,13 @@ export class ClienteRepository {
     return prisma.cliente.findMany({
       where,
       orderBy: { nombre: 'asc' },
+    });
+  }
+
+  /** Fechas de alta/baja/reactivación de todos los clientes, para la evolución histórica. */
+  async findAllHistorialActividad() {
+    return prisma.cliente.findMany({
+      select: { fechaAlta: true, activo: true, fechaBaja: true, fechaReactivacion: true },
     });
   }
 

@@ -1,8 +1,8 @@
-import { Cliente } from '@prisma/client';
 import { pagoRepository } from '../repositories/pago.repository';
 import { clienteRepository } from '../repositories/cliente.repository';
 import { configService } from './config.service';
 import { getToday, getLastMonths } from '../utils/fecha.utils';
+import { estabaActivoEn, HistorialActividad } from '../utils/actividad.utils';
 
 interface IngresoMensual {
   anio: number;
@@ -54,7 +54,8 @@ export class ReporteService {
     const ingresosMensuales = this.fillLast12Months(today, ingresosDb);
 
     // 3. Clientes activos en el tiempo (últimos 12 meses)
-    const clientesActivosEvolucion = this.getEvolucionClientesActivos(activeClients, today);
+    const historial = await clienteRepository.findAllHistorialActividad();
+    const clientesActivosEvolucion = this.getEvolucionClientesActivos(historial, today);
 
     return {
       resumenMesActual: {
@@ -81,13 +82,14 @@ export class ReporteService {
     });
   }
 
-  private getEvolucionClientesActivos(activeClients: Cliente[], today: Date): PuntoHistorico[] {
+  private getEvolucionClientesActivos(clientes: HistorialActividad[], today: Date): PuntoHistorico[] {
     return getLastMonths(today, 12).map(({ anio, mes }) => {
       // Último día del mes (las fechas @db.Date llegan a medianoche UTC)
       const endOfMonth = new Date(Date.UTC(anio, mes, 0));
 
-      // Count active clients whose fechaAlta <= end of this target month
-      const count = activeClients.filter((c) => c.fechaAlta <= endOfMonth).length;
+      // Clientes activos al cierre de ese mes (el mes en curso se mide a hoy)
+      const fechaCorte = endOfMonth < today ? endOfMonth : today;
+      const count = clientes.filter((c) => estabaActivoEn(c, fechaCorte)).length;
 
       return {
         anio,

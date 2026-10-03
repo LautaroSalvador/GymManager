@@ -67,7 +67,7 @@ El dashboard es la pantalla de inicio y debe mostrar de un vistazo:
 ### 4.4 Reportes y Estadísticas
 
 - **Ingresos mensuales:** Gráfico de barras con los ingresos cobrados mes a mes (últimos 12 meses).
-- **Clientes activos en el tiempo:** Gráfico de línea mostrando evolución de la cantidad de clientes activos mes a mes.
+- **Clientes activos en el tiempo:** Gráfico de línea mostrando evolución de la cantidad de clientes activos mes a mes (activos al cierre de cada mes, según fecha de alta, baja y reactivación).
 - **Resumen del mes actual:** Total cobrado vs. total esperado (clientes activos × cuota). El total cobrado incluye todos los pagos del mes, aunque el cliente se haya dado de baja después.
 - **Tasa de cobranza:** Porcentaje de clientes que pagaron en el mes actual.
 
@@ -125,6 +125,8 @@ Aunque actualmente existe un único usuario, se mantiene una tabla dedicada para
 | telefono | VARCHAR (nullable) | Teléfono de contacto |
 | fecha_alta | DATE | Fecha de inscripción (determina el día de vencimiento mensual) |
 | activo | BOOLEAN | True = activo, False = baja |
+| fecha_baja | DATE (nullable) | Fecha de la última baja (se conserva al reactivar) |
+| fecha_reactivacion | DATE (nullable) | Fecha de la última reactivación |
 | created_at | TIMESTAMP | Fecha de creación del registro |
 
 ### Entidad: `pago`

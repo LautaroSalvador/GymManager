@@ -33,6 +33,10 @@ model Cliente {
   altura    String?  // Número de altura (opcional, String para admitir valores como "123B")
   fechaAlta DateTime @map("fecha_alta") @db.Date
   activo    Boolean  @default(true)
+  // Última baja y última reactivación. Permiten reconstruir cuántos clientes
+  // activos había en cada mes y desde cuándo se cobra a un cliente reactivado.
+  fechaBaja         DateTime? @map("fecha_baja") @db.Date
+  fechaReactivacion DateTime? @map("fecha_reactivacion") @db.Date
   createdAt DateTime @default(now()) @map("created_at")
 
   pagos  Pago[]

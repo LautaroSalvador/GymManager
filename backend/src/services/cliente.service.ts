@@ -32,7 +32,24 @@ export class ClienteService {
       }
     }
 
-    return clienteRepository.update(id, data);
+    return clienteRepository.update(id, {
+      ...data,
+      ...this.getFechasCambioDeEstado(client.activo, data.activo),
+    });
+  }
+
+  /**
+   * Registra la fecha de baja o de reactivación cuando cambia `activo`.
+   * La fecha de baja se conserva al reactivar para poder reconstruir el historial.
+   */
+  private getFechasCambioDeEstado(
+    activoActual: boolean,
+    activoNuevo: boolean | undefined
+  ): { fechaBaja?: Date; fechaReactivacion?: Date } {
+    if (activoNuevo === undefined || activoNuevo === activoActual) {
+      return {};
+    }
+    return activoNuevo ? { fechaReactivacion: getToday() } : { fechaBaja: getToday() };
   }
 
   async getClienteById(id: number) {

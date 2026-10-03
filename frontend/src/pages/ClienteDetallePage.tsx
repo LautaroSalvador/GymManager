@@ -251,6 +251,12 @@ export const ClienteDetallePage: React.FC = () => {
                   {getVencimientoMesActual(cliente.fechaAlta)}
                 </dd>
               </div>
+              {!cliente.activo && cliente.fechaBaja && (
+                <div>
+                  <dt className="text-neutral-400 mb-0.5">Fecha de baja</dt>
+                  <dd className="font-medium text-neutral-800">{formatDate(cliente.fechaBaja)}</dd>
+                </div>
+              )}
               {(cliente.calle || cliente.altura) && (
                 <div className="sm:col-span-2">
                   <dt className="text-neutral-400 mb-0.5">Dirección</dt>
