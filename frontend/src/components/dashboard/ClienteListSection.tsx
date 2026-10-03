@@ -50,32 +50,27 @@ export const ClienteListSection: React.FC<ClienteListSectionProps> = ({
     ) : (
       <ul className="divide-y divide-neutral-50">
         {clients.map((c) => (
-          <li key={c.id}>
-            <Link
-              to={`/clientes/${c.id}`}
-              className="flex items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors group"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-neutral-800 group-hover:text-primary-600 transition-colors truncate">
-                  {c.nombre}
-                </p>
-                <p className="text-xs text-neutral-400 mt-0.5">
-                  {c.mesesAdeudados > 0
-                    ? `Debe ${c.mesesAdeudados} ${c.mesesAdeudados === 1 ? 'mes' : 'meses'} · desde ${formatDate(c.fechaVencimiento)}`
-                    : `Vence: ${formatDate(c.fechaVencimiento)}`}
-                </p>
-              </div>
-              {c.telefono && (
-                <a
-                  href={`tel:${c.telefono}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="shrink-0 ml-2 p-1.5 text-neutral-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                  title={c.telefono}
-                >
-                  <Phone size={14} />
-                </a>
-              )}
+          <li key={c.id} className="flex items-center hover:bg-neutral-50 transition-colors group">
+            {/* El link de llamada va al lado (no adentro) del link al cliente: HTML no permite <a> anidados */}
+            <Link to={`/clientes/${c.id}`} className="min-w-0 flex-1 px-4 py-3">
+              <p className="text-sm font-medium text-neutral-800 group-hover:text-primary-600 transition-colors truncate">
+                {c.nombre}
+              </p>
+              <p className="text-xs text-neutral-400 mt-0.5">
+                {c.mesesAdeudados > 0
+                  ? `Debe ${c.mesesAdeudados} ${c.mesesAdeudados === 1 ? 'mes' : 'meses'} · desde ${formatDate(c.fechaVencimiento)}`
+                  : `Vence: ${formatDate(c.fechaVencimiento)}`}
+              </p>
             </Link>
+            {c.telefono && (
+              <a
+                href={`tel:${c.telefono}`}
+                className="shrink-0 mr-4 p-1.5 text-neutral-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                title={c.telefono}
+              >
+                <Phone size={14} />
+              </a>
+            )}
           </li>
         ))}
       </ul>
