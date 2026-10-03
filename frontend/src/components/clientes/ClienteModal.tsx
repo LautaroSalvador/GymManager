@@ -3,6 +3,7 @@ import { clienteService } from '../../services/cliente.service';
 import type { Cliente } from '../../types/cliente.types';
 import { getTodayISO } from '../../utils/format';
 import { Modal, FormError } from '../ui/Modal';
+import { FormField } from '../ui/FormField';
 
 interface ClienteModalProps {
   /** If provided, the modal is in edit mode. */
@@ -51,6 +52,15 @@ export const ClienteModal: React.FC<ClienteModalProps> = ({
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  /** Props comunes a todos los inputs del formulario. */
+  const inputProps = (name: keyof FormState) => ({
+    id: `cliente-${name}`,
+    name,
+    value: form[name],
+    onChange: handleChange,
+    disabled: submitting,
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -87,129 +97,46 @@ export const ClienteModal: React.FC<ClienteModalProps> = ({
       {error && <FormError message={error} />}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Nombre */}
-        <div className="space-y-1.5">
-          <label htmlFor="cliente-nombre" className="block text-sm font-medium text-neutral-700">
-            Nombre completo <span className="text-danger-500">*</span>
-          </label>
-          <input
-            id="cliente-nombre"
-            name="nombre"
-            maxLength={100}
-            type="text"
-            required
-            disabled={submitting}
-            value={form.nombre}
-            onChange={handleChange}
-            placeholder="Juan Pérez"
-            className="input-base"
-          />
-        </div>
+        <FormField label="Nombre completo" htmlFor="cliente-nombre" required>
+          <input {...inputProps('nombre')} type="text" required maxLength={100} placeholder="Juan Pérez" className="input-base" />
+        </FormField>
 
-        {/* DNI */}
-        <div className="space-y-1.5">
-          <label htmlFor="cliente-dni" className="block text-sm font-medium text-neutral-700">
-            DNI <span className="text-neutral-400 font-normal">(opcional)</span>
-          </label>
-          <input
-            id="cliente-dni"
-            name="dni"
-            maxLength={20}
-            type="text"
-            disabled={submitting}
-            value={form.dni}
-            onChange={handleChange}
-            placeholder="30.000.000"
-            className="input-base"
-          />
-        </div>
+        <FormField label="DNI" htmlFor="cliente-dni">
+          <input {...inputProps('dni')} type="text" maxLength={20} placeholder="30.000.000" className="input-base" />
+        </FormField>
 
-        {/* Teléfono */}
-        <div className="space-y-1.5">
-          <label htmlFor="cliente-telefono" className="block text-sm font-medium text-neutral-700">
-            Teléfono <span className="text-neutral-400 font-normal">(opcional)</span>
-          </label>
-          <input
-            id="cliente-telefono"
-            name="telefono"
-            maxLength={30}
-            type="tel"
-            disabled={submitting}
-            value={form.telefono}
-            onChange={handleChange}
-            placeholder="+54 11 1234-5678"
-            className="input-base"
-          />
-        </div>
+        <FormField label="Teléfono" htmlFor="cliente-telefono">
+          <input {...inputProps('telefono')} type="tel" maxLength={30} placeholder="+54 11 1234-5678" className="input-base" />
+        </FormField>
 
-        {/* Dirección */}
-        <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-neutral-700">
-            Dirección <span className="text-neutral-400 font-normal">(opcional)</span>
-          </label>
+        <FormField label="Dirección">
           <div className="flex gap-2">
-            <input
-              id="cliente-calle"
-              name="calle"
-              maxLength={100}
-              type="text"
-              disabled={submitting}
-              value={form.calle}
-              onChange={handleChange}
-              placeholder="Nombre de calle"
-              className="input-base flex-1"
-            />
-            <input
-              id="cliente-altura"
-              name="altura"
-              maxLength={10}
-              type="text"
-              disabled={submitting}
-              value={form.altura}
-              onChange={handleChange}
-              placeholder="Altura"
-              className="input-base w-24"
-            />
+            <input {...inputProps('calle')} type="text" maxLength={100} placeholder="Nombre de calle" className="input-base flex-1" />
+            <input {...inputProps('altura')} type="text" maxLength={10} placeholder="Altura" className="input-base w-24" />
           </div>
-        </div>
+        </FormField>
 
-        {/* Fecha de alta */}
-        <div className="space-y-1.5">
-          <label htmlFor="cliente-fecha-alta" className="block text-sm font-medium text-neutral-700">
-            Fecha de alta <span className="text-danger-500">*</span>
-          </label>
+        <FormField
+          label="Fecha de alta"
+          htmlFor="cliente-fechaAlta"
+          required
+          hint={isEditing ? 'La fecha de alta no se puede modificar (determina el vencimiento mensual).' : undefined}
+        >
           <input
-            id="cliente-fecha-alta"
-            name="fechaAlta"
+            {...inputProps('fechaAlta')}
             type="date"
             required
             disabled={submitting || isEditing}
-            value={form.fechaAlta}
-            onChange={handleChange}
             className="input-base"
           />
-          {isEditing && (
-            <p className="text-xs text-neutral-400">
-              La fecha de alta no se puede modificar (determina el vencimiento mensual).
-            </p>
-          )}
-        </div>
+        </FormField>
 
         {/* Actions */}
         <div className="flex gap-3 pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={submitting}
-            className="btn-secondary flex-1"
-          >
+          <button type="button" onClick={onClose} disabled={submitting} className="btn-secondary flex-1">
             Cancelar
           </button>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="btn-primary flex-1"
-          >
+          <button type="submit" disabled={submitting} className="btn-primary flex-1">
             {submitting ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Dar de alta'}
           </button>
         </div>
