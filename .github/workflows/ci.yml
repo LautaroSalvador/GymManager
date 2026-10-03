@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    name: Lint, tipos, tests y build
+    runs-on: ubuntu-latest
+
+    env:
+      # prisma generate solo necesita que la variable exista; no se conecta a ninguna base.
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Generar cliente de Prisma
+        run: npx prisma generate --schema backend/prisma/schema.prisma
+
+      - name: Lint (backend y frontend)
+        run: npm run lint
+
+      - name: Tipos del backend
+        run: npm run typecheck --workspace=backend
+
+      - name: Tests del backend
+        run: npm test
+
+      - name: Build del frontend
+        run: npm run build --workspace=frontend
