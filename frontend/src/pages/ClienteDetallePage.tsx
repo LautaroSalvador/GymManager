@@ -409,6 +409,7 @@ export const ClienteDetallePage: React.FC = () => {
                 value={newNota}
                 onChange={(e) => setNewNota(e.target.value)}
                 placeholder="Agregar nota..."
+                maxLength={1000}
                 disabled={savingNota}
                 className="input-base text-sm py-2 flex-1"
               />

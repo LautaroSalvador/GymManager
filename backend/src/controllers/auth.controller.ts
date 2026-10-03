@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { authService } from '../services/auth.service';
 import { loginSchema, changePasswordSchema } from '../validators/auth.validator';
-import { env } from '../config/env';
+import { setAuthCookie, clearAuthCookie } from '../utils/authCookie';
 
 export class AuthController {
   async login(req: Request, res: Response, next: NextFunction) {
@@ -9,16 +9,7 @@ export class AuthController {
       const { username, password } = loginSchema.parse(req.body);
       const { token, user } = await authService.login(username, password);
 
-      // En producción (Vercel + Render = dominios distintos) la cookie necesita
-      // SameSite=None + Secure para que el browser la envíe en requests cross-site.
-      // En desarrollo alcanza con SameSite=Lax (mismo origen: localhost).
-      const isProduction = env.NODE_ENV === 'production';
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'none' : 'lax',
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 días
-      });
+      setAuthCookie(res, token);
 
       return res.status(200).json({
         success: true,
@@ -31,12 +22,7 @@ export class AuthController {
 
   async logout(req: Request, res: Response, next: NextFunction) {
     try {
-      const isProduction = env.NODE_ENV === 'production';
-      res.clearCookie('token', {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'none' : 'lax',
-      });
+      clearAuthCookie(res);
 
       return res.status(200).json({
         success: true,
@@ -55,13 +41,7 @@ export class AuthController {
       const token = await authService.changePassword(userId, currentPassword, newPassword);
 
       // Las demás sesiones quedaron revocadas; este dispositivo recibe un token nuevo.
-      const isProduction = env.NODE_ENV === 'production';
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'none' : 'lax',
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 días
-      });
+      setAuthCookie(res, token);
 
       return res.status(200).json({
         success: true,

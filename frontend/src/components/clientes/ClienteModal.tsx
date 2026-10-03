@@ -123,6 +123,7 @@ export const ClienteModal: React.FC<ClienteModalProps> = ({
             <input
               id="cliente-nombre"
               name="nombre"
+              maxLength={100}
               type="text"
               required
               disabled={submitting}
@@ -141,6 +142,7 @@ export const ClienteModal: React.FC<ClienteModalProps> = ({
             <input
               id="cliente-dni"
               name="dni"
+              maxLength={20}
               type="text"
               disabled={submitting}
               value={form.dni}
@@ -158,6 +160,7 @@ export const ClienteModal: React.FC<ClienteModalProps> = ({
             <input
               id="cliente-telefono"
               name="telefono"
+              maxLength={30}
               type="tel"
               disabled={submitting}
               value={form.telefono}
@@ -176,6 +179,7 @@ export const ClienteModal: React.FC<ClienteModalProps> = ({
               <input
                 id="cliente-calle"
                 name="calle"
+                maxLength={100}
                 type="text"
                 disabled={submitting}
                 value={form.calle}
@@ -186,6 +190,7 @@ export const ClienteModal: React.FC<ClienteModalProps> = ({
               <input
                 id="cliente-altura"
                 name="altura"
+                maxLength={10}
                 type="text"
                 disabled={submitting}
                 value={form.altura}

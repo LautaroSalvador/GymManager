@@ -1,33 +1,45 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../utils/errors';
+import { Prisma } from '@prisma/client';
 import { ZodError } from 'zod';
+import { AppError } from '../utils/errors';
+
+/** Error que lanza express.json() cuando el body no es JSON válido. */
+function isJsonSyntaxError(err: Error): boolean {
+  return err instanceof SyntaxError && 'body' in err;
+}
+
+function sendError(res: Response, statusCode: number, message: string) {
+  return res.status(statusCode).json({ success: false, message });
+}
 
 export const errorMiddleware = (
   err: Error,
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction
+  // Express identifica a los error handlers por tener 4 parámetros.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _next: NextFunction
 ) => {
-  console.error('Error occurred:', err);
-
   if (err instanceof AppError) {
-    return res.status(err.statusCode).json({
-      success: false,
-      message: err.message,
-    });
+    return sendError(res, err.statusCode, err.message);
   }
 
   if (err instanceof ZodError) {
     const messages = err.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ');
-    return res.status(400).json({
-      success: false,
-      message: `Validation failed: ${messages}`,
-    });
+    return sendError(res, 400, `Validation failed: ${messages}`);
   }
 
-  // Generic internal server error
-  return res.status(500).json({
-    success: false,
-    message: err.message || 'Internal Server Error',
-  });
+  if (isJsonSyntaxError(err)) {
+    return sendError(res, 400, 'El cuerpo de la request no es JSON válido');
+  }
+
+  // P2025: se intentó modificar o borrar un registro que no existe.
+  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+    return sendError(res, 404, 'Registro no encontrado');
+  }
+
+  // Error inesperado: el detalle queda solo en el log del servidor, nunca en la respuesta
+  // (podría exponer nombres de tablas, campos o consultas).
+  console.error('Unexpected error:', err);
+  return sendError(res, 500, 'Error interno del servidor');
 };
