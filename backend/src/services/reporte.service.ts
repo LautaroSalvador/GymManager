@@ -2,7 +2,7 @@ import { Cliente } from '@prisma/client';
 import { pagoRepository } from '../repositories/pago.repository';
 import { clienteRepository } from '../repositories/cliente.repository';
 import { configService } from './config.service';
-import { normalizeDate } from '../utils/fecha.utils';
+import { getToday, getLastMonths } from '../utils/fecha.utils';
 
 interface IngresoMensual {
   anio: number;
@@ -19,7 +19,7 @@ interface PuntoHistorico {
 
 export class ReporteService {
   async getReportesData() {
-    const today = normalizeDate(new Date());
+    const today = getToday();
     const currentYear = today.getUTCFullYear();
     const currentMonth = today.getUTCMonth() + 1;
 
@@ -69,54 +69,32 @@ export class ReporteService {
   }
 
   private fillLast12Months(today: Date, ingresos: IngresoMensual[]): PuntoHistorico[] {
-    const result: PuntoHistorico[] = [];
-    const tempDate = new Date(today.getTime());
-
-    for (let i = 0; i < 12; i++) {
-      const year = tempDate.getUTCFullYear();
-      const month = tempDate.getUTCMonth() + 1; // 1-indexed
-
-      const match = ingresos.find((d) => d.anio === year && d.mes === month);
-
-      result.unshift({
-        anio: year,
-        mes: month,
-        label: `${this.getMesAbreviado(month)} ${year}`,
+    return getLastMonths(today, 12).map(({ anio, mes }) => {
+      const match = ingresos.find((d) => d.anio === anio && d.mes === mes);
+      return {
+        anio,
+        mes,
+        label: `${this.getMesAbreviado(mes)} ${anio}`,
         valor: match ? match.total : 0,
-      });
-
-      // Move to previous month
-      tempDate.setUTCMonth(tempDate.getUTCMonth() - 1);
-    }
-
-    return result;
+      };
+    });
   }
 
   private getEvolucionClientesActivos(activeClients: Cliente[], today: Date): PuntoHistorico[] {
-    const result: PuntoHistorico[] = [];
-    const tempDate = new Date(today.getTime());
-
-    for (let i = 0; i < 12; i++) {
-      const year = tempDate.getUTCFullYear();
-      const month = tempDate.getUTCMonth() + 1;
-
-      // End of target month
-      const endOfMonth = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+    return getLastMonths(today, 12).map(({ anio, mes }) => {
+      // Último día del mes (las fechas @db.Date llegan a medianoche UTC)
+      const endOfMonth = new Date(Date.UTC(anio, mes, 0));
 
       // Count active clients whose fechaAlta <= end of this target month
       const count = activeClients.filter((c) => c.fechaAlta <= endOfMonth).length;
 
-      result.unshift({
-        anio: year,
-        mes: month,
-        label: `${this.getMesAbreviado(month)} ${year}`,
+      return {
+        anio,
+        mes,
+        label: `${this.getMesAbreviado(mes)} ${anio}`,
         valor: count,
-      });
-
-      tempDate.setUTCMonth(tempDate.getUTCMonth() - 1);
-    }
-
-    return result;
+      };
+    });
   }
 
   /**

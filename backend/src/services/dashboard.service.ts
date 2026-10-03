@@ -1,7 +1,7 @@
 import { clienteRepository } from '../repositories/cliente.repository';
 import { configService } from './config.service';
 import { clasificarCliente } from '../utils/clasificacion.utils';
-import { getBillingDate, normalizeDate } from '../utils/fecha.utils';
+import { getBillingDate, getToday, normalizeDate } from '../utils/fecha.utils';
 
 interface DashboardCliente {
   id: number;
@@ -18,7 +18,7 @@ const byVencimiento = (a: DashboardCliente, b: DashboardCliente) =>
 
 export class DashboardService {
   async getDashboardData(referenceDateInput?: Date) {
-    const today = referenceDateInput ? normalizeDate(referenceDateInput) : normalizeDate(new Date());
+    const today = referenceDateInput ? normalizeDate(referenceDateInput) : getToday();
     const currentYear = today.getUTCFullYear();
     const currentMonth = today.getUTCMonth() + 1; // 1-indexed
 

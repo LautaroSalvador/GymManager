@@ -2,7 +2,7 @@ import { CreateClienteData, UpdateClienteData } from '../types/cliente.types';
 import { clienteRepository } from '../repositories/cliente.repository';
 import { configService } from './config.service';
 import { clasificarCliente } from '../utils/clasificacion.utils';
-import { normalizeDate } from '../utils/fecha.utils';
+import { getToday } from '../utils/fecha.utils';
 import { AppError } from '../utils/errors';
 
 export class ClienteService {
@@ -52,7 +52,7 @@ export class ClienteService {
    * Estado: AL_DIA | COBRAR_HOY | PROXIMO_A_VENCER | CON_DEUDA
    */
   async getAllClientesConEstado() {
-    const today = normalizeDate(new Date());
+    const today = getToday();
     const currentYear = today.getUTCFullYear();
     const currentMonth = today.getUTCMonth() + 1;
 

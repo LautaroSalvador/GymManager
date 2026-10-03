@@ -30,3 +30,46 @@ export function getDaysDifference(date1: Date, date2: Date): number {
   const diffTime = d1 - d2;
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
+
+/** Zona horaria del gimnasio: define qué día es "hoy" para vencimientos y reportes. */
+export const GYM_TIME_ZONE = 'America/Argentina/Buenos_Aires';
+
+/**
+ * Devuelve la fecha calendario actual en la zona horaria del gimnasio,
+ * normalizada a medianoche UTC (el mismo formato que usan las fechas @db.Date).
+ *
+ * Sin esto, a partir de las 21 h de Argentina (00 h UTC) el servidor
+ * ya consideraría que es el día siguiente.
+ */
+export function getToday(now: Date = new Date(), timeZone: string = GYM_TIME_ZONE): Date {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).formatToParts(now);
+
+  const getPart = (type: Intl.DateTimeFormatPartTypes): number =>
+    Number(parts.find((part) => part.type === type)?.value);
+
+  return new Date(Date.UTC(getPart('year'), getPart('month') - 1, getPart('day')));
+}
+
+export interface Periodo {
+  anio: number;
+  mes: number; // 1-12
+}
+
+/**
+ * Devuelve los últimos `count` meses (incluido el de `today`), del más viejo
+ * al más nuevo. Parte siempre del día 1 para evitar el desborde de fechas:
+ * restar un mes al 31/12 daría "31 de noviembre" → 1 de diciembre.
+ */
+export function getLastMonths(today: Date, count: number): Periodo[] {
+  const result: Periodo[] = [];
+  for (let i = count - 1; i >= 0; i--) {
+    const firstOfMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - i, 1));
+    result.push({ anio: firstOfMonth.getUTCFullYear(), mes: firstOfMonth.getUTCMonth() + 1 });
+  }
+  return result;
+}
